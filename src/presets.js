@@ -33,10 +33,12 @@ const ipv4 = {
 
 // ---------------------------------------------------------------------------
 // IPv6  – e.g. 2001:0db8:85a3:0000:0000:8a2e:0370:7334
-// Segment values are stored as hex strings; min/max are not specified.
+// Segment values are stored as hex strings; radix: 16 for correct ↑/↓ counting.
 // ---------------------------------------------------------------------------
 const ipv6 = {
-  segments: Array.from({ length: 8 }, () => ({ value: '0000' })),
+  segments: Array.from({ length: 8 }, () => ({
+    value: '0000', min: 0, max: 0xFFFF, step: 1, radix: 16, pattern: /[0-9a-fA-F]/,
+  })),
   format (values) {
     return values.map(v => v.padStart(4, '0')).join(':')
   },
@@ -71,10 +73,10 @@ const duration = {
 // ---------------------------------------------------------------------------
 const rgba = {
   segments: [
-    { value: '0',   min: 0, max: 255, step: 1   },
-    { value: '0',   min: 0, max: 255, step: 1   },
-    { value: '0',   min: 0, max: 255, step: 1   },
-    { value: '1',   min: 0, max: 1,   step: 0.1 },
+    { value: '0',   min: 0, max: 255, step: 1,   pattern: /\d/     },
+    { value: '0',   min: 0, max: 255, step: 1,   pattern: /\d/     },
+    { value: '0',   min: 0, max: 255, step: 1,   pattern: /\d/     },
+    { value: '1',   min: 0, max: 1,   step: 0.1, pattern: /[\d.]/ },
   ],
   format (values) {
     return `rgba(${values[0]}, ${values[1]}, ${values[2]}, ${values[3]})`
@@ -112,11 +114,12 @@ const uuid = {
 // ---------------------------------------------------------------------------
 // MAC address  – 00:1A:2B:3C:4D:5E
 // Segment values are stored as uppercase hex strings (e.g. 'FF').
-// Up/Down arrow keys increment/decrement via decimal arithmetic on the hex
-// display value; min/max are therefore not specified (hex semantics differ).
+// radix: 16 makes ↑/↓ arrow keys count in hexadecimal (09 → 0A → 0B … → FF).
 // ---------------------------------------------------------------------------
 const mac = {
-  segments: Array.from({ length: 6 }, () => ({ value: '00' })),
+  segments: Array.from({ length: 6 }, () => ({
+    value: '00', min: 0, max: 255, step: 1, radix: 16, pattern: /[0-9a-fA-F]/,
+  })),
   format (values) {
     return values.map(v => v.padStart(2, '0').toUpperCase()).join(':')
   },

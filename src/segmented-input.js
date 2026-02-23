@@ -122,9 +122,11 @@ export class SegmentedInput {
   /**
    * @param {HTMLInputElement} input - the input element to enhance
    * @param {Object} options
-   * @param {Array<{value?: string, min?: number, max?: number, step?: number}>} options.segments
+   * @param {Array<{value?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp}>} options.segments
    *   Segment metadata.  `value` is the default; `min`/`max` clamp up/down arrow changes;
-   *   `step` controls how much each arrow press changes the value (default 1).
+   *   `step` controls how much each arrow press changes the value (default 1);
+   *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
+   *   `pattern` is an optional RegExp tested against each typed character – non-matching keys are blocked.
    * @param {function(string[]): string} options.format
    *   Converts an array of segment value strings into the full display string.
    * @param {function(string): string[]} options.parse
@@ -240,19 +242,32 @@ export class SegmentedInput {
     const seg = this.segments[index]
     if (!seg) return
 
+    const radix = seg.radix ?? 10
     const values = this._parse(this.input.value)
     const step = seg.step ?? 1
-    let current = parseFloat(values[index])
-    if (isNaN(current)) current = parseFloat(seg.value) || 0
+
+    // Use parseFloat for base-10 (supports decimals), parseInt for other radixes
+    let current = radix === 10
+      ? parseFloat(values[index])
+      : parseInt(values[index], radix)
+    if (isNaN(current)) {
+      current = radix === 10
+        ? parseFloat(String(seg.value ?? 0)) || 0
+        : parseInt(String(seg.value ?? 0), radix) || 0
+    }
 
     let next = current + direction * step
 
     if (seg.max !== undefined && next > seg.max) next = seg.max
     if (seg.min !== undefined && next < seg.min) next = seg.min
 
-    // Preserve the number of decimal places implied by `step`
-    const decimals = (String(step).split('.')[1] || '').length
-    values[index] = decimals > 0 ? next.toFixed(decimals) : String(Math.round(next))
+    if (radix !== 10) {
+      values[index] = Math.round(next).toString(radix).toUpperCase()
+    } else {
+      // Preserve the number of decimal places implied by `step`
+      const decimals = (String(step).split('.')[1] || '').length
+      values[index] = decimals > 0 ? next.toFixed(decimals) : String(Math.round(next))
+    }
 
     this.input.value = this._format(values)
     this.focusSegment(index)
@@ -287,6 +302,16 @@ export class SegmentedInput {
   }
 
   _onKeydown (event) {
+    // Block printable characters that don't match the active segment's pattern.
+    // This prevents e.g. typing letters into a numeric RGBA segment.
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+      const seg = this.segments[this._activeSegment]
+      if (seg && seg.pattern && !seg.pattern.test(event.key)) {
+        event.preventDefault()
+        return
+      }
+    }
+
     switch (event.key) {
       case 'ArrowLeft':
         event.preventDefault()
