@@ -55,9 +55,9 @@ const ipv6 = {
 const duration = {
   segments: [
     // Hours: no upper bound in a duration, but cap typing at 3 digits (0–999)
-    { value: '00', min: 0, step: 1, maxLength: 3 },
-    { value: '00', min: 0, max: 59, step: 1 },
-    { value: '00', min: 0, max: 59, step: 1 },
+    { value: '00', placeholder: 'hh', min: 0, step: 1, maxLength: 3 },
+    { value: '00', placeholder: 'mm', min: 0, max: 59, step: 1 },
+    { value: '00', placeholder: 'ss', min: 0, max: 59, step: 1 },
   ],
   format (values) {
     return values.map(v => String(v).padStart(2, '0')).join(':')

@@ -122,8 +122,11 @@ export class SegmentedInput {
   /**
    * @param {HTMLInputElement} input - the input element to enhance
    * @param {Object} options
-   * @param {Array<{value?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
-   *   Segment metadata.  `value` is the default; `min`/`max` clamp up/down arrow changes;
+   * @param {Array<{value?: string, placeholder?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
+   *   Segment metadata.  `value` is the default numeric value used when incrementing from a blank state;
+   *   `placeholder` is the display string shown in the segment when it has no real value (e.g. 'hh', 'mm', 'ss') –
+   *   defaults to `value` when not set;
+   *   `min`/`max` clamp up/down arrow changes;
    *   `step` controls how much each arrow press changes the value (default 1);
    *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
    *   `pattern` is an optional RegExp tested against each typed character – non-matching keys are blocked;
@@ -150,17 +153,29 @@ export class SegmentedInput {
     // Buffer accumulates typed characters for the active segment between focus changes.
     this._segmentBuffer = ''
 
-    // Set initial value if the input is empty
-    if (!input.value) {
-      input.value = this._format(this.segments.map(s => String(s.value ?? s.min ?? 0)))
+    // Compute the placeholder values once (used for Backspace reset and the HTML placeholder).
+    // Resolution order: explicit `placeholder` string > `value` default > `min` > '0'.
+    // For non-numeric segments (e.g. UUID hex groups) always set an explicit `placeholder`.
+    this._placeholderValues = this.segments.map(s => s.placeholder ?? String(s.value ?? s.min ?? 0))
+    this._formattedPlaceholder = this._format(this._placeholderValues)
+
+    // Set input.placeholder to the formatted segment placeholders when one is not already set.
+    if (!input.placeholder) {
+      input.placeholder = this._formattedPlaceholder
     }
+
+    // Leave input.value as-is when it already has a real value from markup.
+    // When empty, we keep it empty so the browser shows the HTML placeholder attribute
+    // and the field correctly fails constraint validation (e.g. required).
 
     this._onClick = this._onClickOrFocus.bind(this)
     this._onFocus = this._onFocusIn.bind(this)
+    this._onBlur = this._onBlurOut.bind(this)
     this._onKeyDown = this._onKeydown.bind(this)
 
     input.addEventListener('click', this._onClick)
     input.addEventListener('focus', this._onFocus)
+    input.addEventListener('blur', this._onBlur)
     input.addEventListener('keydown', this._onKeyDown)
   }
 
@@ -235,6 +250,7 @@ export class SegmentedInput {
   destroy () {
     this.input.removeEventListener('click', this._onClick)
     this.input.removeEventListener('focus', this._onFocus)
+    this.input.removeEventListener('blur', this._onBlur)
     this.input.removeEventListener('keydown', this._onKeyDown)
   }
 
@@ -245,6 +261,9 @@ export class SegmentedInput {
   _adjustSegment (index, direction) {
     const seg = this.segments[index]
     if (!seg) return
+
+    // Ensure the placeholder is shown before we start reading/writing the value.
+    if (!this.input.value) this.input.value = this._formattedPlaceholder
 
     const radix = seg.radix ?? 10
     const values = this._parse(this.input.value)
@@ -288,11 +307,27 @@ export class SegmentedInput {
   // ---------------------------------------------------------------------------
 
   _onFocusIn () {
-    // When tabbing into the field, defer so the browser has finished
-    // placing the native selection before we override it.
+    // When the input has no value, fill in the formatted placeholder so the segments
+    // are visible while the field is focused.  We do this synchronously (before the
+    // setTimeout) so that the click handler that fires right after can read the value.
+    if (!this.input.value) {
+      this.input.value = this._formattedPlaceholder
+    }
+    // Defer the actual selection so the browser has finished placing its own cursor.
     setTimeout(() => {
       this.focusSegment(this._activeSegment)
     }, 0)
+  }
+
+  _onBlurOut () {
+    // If the user left the field without entering any real data (all segments still
+    // show their placeholder text), clear the value so the HTML placeholder attribute
+    // is shown again and constraint validation (e.g. required) fails correctly.
+    if (this._isPlaceholderState()) {
+      this.input.value = ''
+      this._activeSegment = 0
+      this._segmentBuffer = ''
+    }
   }
 
   _onClickOrFocus (event) {
@@ -308,7 +343,7 @@ export class SegmentedInput {
 
   _onKeydown (event) {
     // Intercept ALL printable characters: handle them ourselves so the segment
-    // always stays highlighted and we control overflow / auto-advance behaviour.
+    // always stays highlighted and we control overflow / auto-advance behavior.
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
       event.preventDefault()
       this._handleSegmentInput(event.key)
@@ -318,19 +353,16 @@ export class SegmentedInput {
     switch (event.key) {
       case 'Backspace':
         event.preventDefault()
-        if (this._segmentBuffer.length > 0) {
-          // Remove last typed character from the buffer
-          this._segmentBuffer = this._segmentBuffer.slice(0, -1)
+        // Reset the whole active segment to its placeholder value (matching the behavior
+        // of Chrome's <input type="date"> where Backspace clears the focused segment).
+        {
+          const placeholder = this._placeholderValues[this._activeSegment]
+          this._segmentBuffer = ''
           const values = this._parse(this.input.value)
-          values[this._activeSegment] = this._segmentBuffer
+          values[this._activeSegment] = placeholder
           this.input.value = this._format(values)
           this._dispatch('input')
           highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
-        } else {
-          // Buffer already empty: move to previous segment
-          if (this._activeSegment > 0) {
-            this.focusSegment(this._activeSegment - 1)
-          }
         }
         break
 
@@ -386,6 +418,9 @@ export class SegmentedInput {
     const seg = this.segments[this._activeSegment]
     if (!seg) return
 
+    // Ensure the placeholder is shown before we start reading/writing the value.
+    if (!this.input.value) this.input.value = this._formattedPlaceholder
+
     // Reject characters that don't match the segment's allowed pattern
     if (seg.pattern && !seg.pattern.test(key)) return
 
@@ -422,7 +457,7 @@ export class SegmentedInput {
 
   /**
    * Returns true when the typed buffer should trigger auto-advance.
-   * Mirrors Chrome's `<input type=date>` behaviour:
+   * Mirrors Chrome's `<input type=date>` behavior:
    * - advance when the buffer is as long as the formatted maximum value; or
    * - advance when the smallest possible next digit would already overflow max.
    * @param {{max?: number, step?: number, maxLength?: number}} seg
@@ -451,6 +486,18 @@ export class SegmentedInput {
     // 3 * 10 = 30 > 12, so no two-digit number starting with 3 is valid → advance)
     const val = parseInt(buffer, radix)
     return val * radix > seg.max
+  }
+
+  /**
+   * Returns true when every segment in the current input value shows its
+   * placeholder text, meaning the user has not entered any real data.
+   * Used by the blur handler to clear the value for constraint validation.
+   * @returns {boolean}
+   */
+  _isPlaceholderState () {
+    if (!this.input.value) return true
+    const values = this._parse(this.input.value)
+    return this._placeholderValues.every((p, i) => values[i] === p)
   }
 
   /**
