@@ -125,6 +125,18 @@
     <input id="phone" required />
     <small>e.g. (555) 867-5309 — area code · exchange · subscriber</small>
 
+    <label>Price ($USD)</label>
+    <input id="price" required />
+    <small>e.g. $19.99 — dollars · cents</small>
+
+    <label>Math expression (x + y) / z</label>
+    <input id="mathExpr" required />
+    <small>e.g. (6 + 4) / 2 — three operands · ↑/↓ adjusts each</small>
+
+    <label>Full name</label>
+    <input id="fullName" required />
+    <small>First · Last — text segments, letters only · Tab to move between names</small>
+
     <button type="submit">Submit</button>
   </form>
 
@@ -147,6 +159,9 @@
       ['creditCard', presets.creditCard],
       ['expiryDate', presets.expiryDate],
       ['phone',      presets.phone],
+      ['price',      presets.price],
+      ['mathExpr',   presets.mathExpr],
+      ['fullName',   presets.fullName],
     ]
 
     for (const [id, preset] of fields) {

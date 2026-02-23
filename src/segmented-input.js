@@ -122,7 +122,7 @@ export class SegmentedInput {
   /**
    * @param {HTMLInputElement} input - the input element to enhance
    * @param {Object} options
-   * @param {Array<{value?: string, placeholder?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
+   * @param {Array<{value?: string, placeholder?: string, type?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
    *   Segment metadata.  `value` is the default numeric value used when incrementing from a blank state;
    *   `placeholder` is the display string shown in the segment when it has no real value (e.g. 'hh', 'mm', 'ss') –
    *   defaults to `value` when not set;
@@ -269,6 +269,9 @@ export class SegmentedInput {
   _adjustSegment (index, direction) {
     const seg = this.segments[index]
     if (!seg) return
+
+    // Text segments (type: 'text') have no numeric meaning; up/down is a no-op.
+    if (seg.type === 'text') return
 
     // Ensure the placeholder is shown before we start reading/writing the value.
     if (!this.input.value) this.input.value = this._formattedPlaceholder

@@ -12,7 +12,7 @@
 
 // ---------------------------------------------------------------------------
 // IPv4  – e.g. 192.168.0.1
-// placeholder '--' uses a character blocked by pattern:/\d/, so it is never
+// placeholder '--' uses a character blocked by pattern: /\d/, so it is never
 // a real value and cleanly signals an unfilled segment to _updateValidity.
 // ---------------------------------------------------------------------------
 const ipv4 = {
@@ -166,7 +166,7 @@ const time = {
 
 // ---------------------------------------------------------------------------
 // Date  – YYYY-MM-DD
-// placeholder 'yyyy'/'mm'/'dd' uses letters blocked by pattern:/\d/
+// placeholder 'yyyy'/'mm'/'dd' uses letters blocked by pattern: /\d/
 // and none of those strings appear in the '-' separators.
 // ---------------------------------------------------------------------------
 const date = {
@@ -291,7 +291,74 @@ const hsla = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Price  – $NNN.CC  (dollars and cents)
+// placeholder '--' uses '-' which is blocked by pattern: /\d/
+// ---------------------------------------------------------------------------
+const price = {
+  segments: [
+    // Dollars: no upper bound; cap typing at 5 digits (0–99999)
+    { value: '0', placeholder: '--', min: 0, step: 1, maxLength: 5, pattern: /\d/ },
+    // Cents: 00–99
+    { value: '00', placeholder: '--', min: 0, max: 99, step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    return `$${values[0]}.${String(values[1]).padStart(2, '0')}`
+  },
+  parse (str) {
+    const without$ = str.replace(/^\$/, '')
+    const dot = without$.indexOf('.')
+    if (dot === -1) return [without$ || '--', '--']
+    return [without$.slice(0, dot) || '--', without$.slice(dot + 1).padStart(2, '0')]
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Math expression  – (x + y) / z
+// Demonstrates arbitrary expression layouts; all three operands are integers.
+// placeholder '--' uses '-' which is blocked by pattern: /\d/ and does not
+// appear in the '(', ' + ', ') / ' boilerplate.
+// ---------------------------------------------------------------------------
+const mathExpr = {
+  segments: [
+    { value: '0', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
+    { value: '0', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
+    { value: '1', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    return `(${values[0]} + ${values[1]}) / ${values[2]}`
+  },
+  parse (str) {
+    const m = str.match(/\(\s*([^+)]+?)\s*\+\s*([^)]+?)\s*\)\s*\/\s*(.+)/)
+    if (m) return [m[1].trim(), m[2].trim(), m[3].trim()]
+    return ['--', '--', '--']
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Full name  – First Last
+// Text segments (type: 'text') have no numeric meaning; up/down arrows are no-ops.
+// placeholder '----------' uses '-' which is blocked by pattern: /[a-zA-Z]/
+// and does not appear in the space separator.
+// maxLength caps each name at 20 characters before auto-advancing to last name.
+// ---------------------------------------------------------------------------
+const fullName = {
+  segments: [
+    { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /[a-zA-Z]/ },
+    { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /[a-zA-Z]/ },
+  ],
+  format (values) {
+    return `${values[0]} ${values[1]}`
+  },
+  parse (str) {
+    const idx = str.indexOf(' ')
+    if (idx === -1) return [str, '----------']
+    return [str.slice(0, idx), str.slice(idx + 1)]
+  },
+}
+
 export const presets = {
   ipv4, ipv6, duration, rgba, uuid, mac,
   time, date, creditCard, semver, expiryDate, phone, hsla,
+  price, mathExpr, fullName,
 }
