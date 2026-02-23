@@ -16,61 +16,93 @@
       font-family: monospace;
       font-size: 1.1rem;
       padding: 0.3rem 0.5rem;
-      border: 1px solid #aaa;
+      border: 2px solid #aaa;
       border-radius: 4px;
       width: 100%;
       box-sizing: border-box;
       margin-top: 0.25rem;
     }
-    input:focus { outline: 2px solid #4a90d9; }
+    input:focus { outline: 2px solid #4a90d9; border-color: #4a90d9; }
+    input:valid   { border-color: #3a3; }
+    input:invalid { border-color: #c33; }
+    /* Don't show red on an untouched empty field */
+    input:placeholder-shown { border-color: #aaa; }
     small { color: #555; font-size: 0.8rem; }
+    button[type=submit] {
+      margin-top: 1.5rem;
+      padding: 0.5rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      background: #4a90d9;
+      color: #fff;
+      cursor: pointer;
+    }
+    button[type=submit]:hover { background: #357abd; }
+    #result {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 4px;
+      background: #eef;
+      font-family: monospace;
+      white-space: pre-wrap;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>segmented-input demo</h1>
   <p>
     Click inside any field and use <kbd>←</kbd> / <kbd>→</kbd> to navigate between segments,
-    and <kbd>↑</kbd> / <kbd>↓</kbd> to increment or decrement the focused segment.
+    <kbd>↑</kbd> / <kbd>↓</kbd> to increment or decrement, and <kbd>Backspace</kbd> to clear a segment.
     <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> also cycle through segments.
+    Green border = valid, red border = invalid/incomplete.
   </p>
 
-  <label>RGBA colour</label>
-  <input id="rgba" value="rgba(125, 125, 125, 0.5)" />
-  <small>Segments: r · g · b · a</small>
+  <form id="demo-form">
+    <label>RGBA colour</label>
+    <input id="rgba" required />
+    <small>Segments: r · g · b · a — placeholder: rgba(r, g, b, a)</small>
 
-  <label>IPv4 address</label>
-  <input id="ipv4" value="192.168.1.1" />
-  <small>Segments: octet 1 · octet 2 · octet 3 · octet 4</small>
+    <label>IPv4 address</label>
+    <input id="ipv4" value="192.168.0.1" required />
+    <small>Segments: octet 1 · octet 2 · octet 3 · octet 4</small>
 
-  <label>Duration (HH:MM:SS)</label>
-  <input id="duration" value="01:30:00" />
-  <small>Segments: hours · minutes · seconds</small>
+    <label>Duration (HH:MM:SS)</label>
+    <input id="duration" required />
+    <small>Segments: hours · minutes · seconds — placeholder: hh:mm:ss</small>
 
-  <label>MAC address</label>
-  <input id="mac" value="00:1A:2B:3C:4D:5E" />
-  <small>Segments: 6 × byte (hex)</small>
+    <label>MAC address</label>
+    <input id="mac" value="00:1A:2B:3C:4D:5E" required />
+    <small>Segments: 6 × byte (hex) — 00 in any position is valid</small>
 
-  <label>UUID</label>
-  <input id="uuid" value="550e8400-e29b-41d4-a716-446655440000" />
-  <small>Segments: 8-4-4-4-12</small>
+    <label>UUID</label>
+    <input id="uuid" required />
+    <small>Segments: 8-4-4-4-12 hex groups</small>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <pre id="result"></pre>
 
   <script type="module">
     import { SegmentedInput, presets } from './index.js'
 
-    // RGBA
-    new SegmentedInput(document.getElementById('rgba'), presets.rgba)
-
-    // IPv4
-    new SegmentedInput(document.getElementById('ipv4'), presets.ipv4)
-
-    // Duration
+    new SegmentedInput(document.getElementById('rgba'),     presets.rgba)
+    new SegmentedInput(document.getElementById('ipv4'),     presets.ipv4)
     new SegmentedInput(document.getElementById('duration'), presets.duration)
+    new SegmentedInput(document.getElementById('mac'),      presets.mac)
+    new SegmentedInput(document.getElementById('uuid'),     presets.uuid)
 
-    // MAC
-    new SegmentedInput(document.getElementById('mac'), presets.mac)
-
-    // UUID
-    new SegmentedInput(document.getElementById('uuid'), presets.uuid)
+    document.getElementById('demo-form').addEventListener('submit', e => {
+      e.preventDefault()
+      const data = Object.fromEntries(
+        ['rgba', 'ipv4', 'duration', 'mac', 'uuid'].map(id => [id, document.getElementById(id).value])
+      )
+      const out = document.getElementById('result')
+      out.textContent = JSON.stringify(data, null, 2)
+      out.style.display = 'block'
+    })
   </script>
 </body>
 </html>
