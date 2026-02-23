@@ -74,16 +74,17 @@ const duration = {
 
 // ---------------------------------------------------------------------------
 // RGBA  – rgba(r, g, b, a)  where r/g/b ∈ [0,255] and a ∈ [0,1]
-// placeholder letters 'r','g','b','a' are blocked by the numeric patterns,
-// so even rgba(0, 0, 0, 1) is never confused with an unfilled state.
+// placeholder '--' uses '-' which is blocked by both numeric patterns (/\d/ and
+// /[\d.]/), and '--' never appears inside the "rgba(...)" boilerplate, so
+// getSegmentRanges always finds the correct positions via indexOf.
 // parse uses a relaxed regex so placeholder strings round-trip correctly.
 // ---------------------------------------------------------------------------
 const rgba = {
   segments: [
-    { value: '0',   placeholder: 'r', min: 0, max: 255, step: 1,   pattern: /\d/    },
-    { value: '0',   placeholder: 'g', min: 0, max: 255, step: 1,   pattern: /\d/    },
-    { value: '0',   placeholder: 'b', min: 0, max: 255, step: 1,   pattern: /\d/    },
-    { value: '1',   placeholder: 'a', min: 0, max: 1,   step: 0.1, pattern: /[\d.]/ },
+    { value: '0',   placeholder: '--', min: 0, max: 255, step: 1,   pattern: /\d/    },
+    { value: '0',   placeholder: '--', min: 0, max: 255, step: 1,   pattern: /\d/    },
+    { value: '0',   placeholder: '--', min: 0, max: 255, step: 1,   pattern: /\d/    },
+    { value: '1',   placeholder: '--', min: 0, max: 1,   step: 0.1, pattern: /[\d.]/ },
   ],
   format (values) {
     return `rgba(${values[0]}, ${values[1]}, ${values[2]}, ${values[3]})`
