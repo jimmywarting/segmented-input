@@ -81,6 +81,10 @@
     <input id="date" required />
     <small>e.g. 2024-03-15 — year · month · day</small>
 
+    <label>Date range (YYYY-MM-DD → YYYY-MM-DD)</label>
+    <input id="dateRange" required />
+    <small>e.g. 2024-01-01 → 2024-12-31 — start date · end date</small>
+
     <label>Time (24-hour HH:MM:SS)</label>
     <input id="time" required />
     <small>e.g. 14:30:00 — hours 0–23 · minutes 0–59 · seconds 0–59</small>
@@ -158,6 +162,7 @@
       ['mac',        presets.mac],
       ['ipv6',       presets.ipv6],
       ['date',       presets.date],
+      ['dateRange',  presets.dateRange],
       ['time',       presets.time],
       ['duration',   presets.duration],
       ['rgba',       presets.rgba],

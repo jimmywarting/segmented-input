@@ -403,8 +403,50 @@ const currency = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Date range – YYYY-MM-DD → YYYY-MM-DD  (start date and end date in one field)
+// Six segments: [startYear, startMonth, startDay, endYear, endMonth, endDay].
+// The two date halves share the same placeholder strings ('yyyy', 'mm', 'dd');
+// getSegmentRanges finds them in left-to-right order via cumulative indexOf so
+// both halves are located correctly even when their values are identical.
+// ---------------------------------------------------------------------------
+const dateRange = {
+  segments: [
+    // Start date
+    { value: String(new Date().getFullYear()), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+    { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+    { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+    // End date
+    { value: String(new Date().getFullYear()), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+    { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+    { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    const pad4 = v => String(v).padStart(4, '0')
+    const pad2 = v => String(v).padStart(2, '0')
+    return `${pad4(values[0])}-${pad2(values[1])}-${pad2(values[2])} \u2192 ${pad4(values[3])}-${pad2(values[4])}-${pad2(values[5])}`
+  },
+  parse (str) {
+    const halves = str.split(' \u2192 ')
+    // Parse a single YYYY-MM-DD string (or a partial/placeholder string) into [year, month, day].
+    // Non-digit placeholder values (e.g. 'yyyy', 'mm', 'dd') pass through unchanged so that
+    // _isPlaceholderState correctly identifies unfilled segments.
+    const parseDate = (s) => {
+      const parts = (s || '').split('-')
+      const y = parts[0] || 'yyyy'
+      const m = parts[1] || 'mm'
+      const d = parts[2] || 'dd'
+      // Only pad strings that look like real numeric values (avoid corrupting placeholder text).
+      const padIfNumeric = (v, len) => /^\d+$/.test(v) ? v.padStart(len, '0') : v
+      return [padIfNumeric(y, 4), padIfNumeric(m, 2), padIfNumeric(d, 2)]
+    }
+    // Guard against missing separator: treat the whole string as the start date.
+    return [...parseDate(halves[0]), ...parseDate(halves[1] ?? '')]
+  },
+}
+
 export const presets = {
   ipv4, ipv6, duration, rgba, uuid, mac,
-  time, date, creditCard, semver, expiryDate, phone, hsla,
+  time, date, dateRange, creditCard, semver, expiryDate, phone, hsla,
   price, mathExpr, fullName, calc, currency,
 }
