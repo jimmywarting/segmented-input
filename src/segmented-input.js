@@ -136,6 +136,9 @@ export class SegmentedInput {
    * @param {function(string): string[]} options.parse
    *   Splits the full display string back into an array of segment value strings.
    *   Must always return the same number of elements as `options.segments`.
+   * @param {string} [options.invalidMessage]
+   *   The message passed to `setCustomValidity()` when one or more segments still show
+   *   placeholder text (i.e. the value is incomplete).  Defaults to `'Please fill in all fields.'`.
    */
   constructor (input, options) {
     if (!input || input.tagName !== 'INPUT') {
@@ -150,6 +153,7 @@ export class SegmentedInput {
     this._format = options.format
     this._parse = options.parse
     this._activeSegment = 0
+    this._invalidMessage = options.invalidMessage ?? 'Please fill in all fields.'
     // Buffer accumulates typed characters for the active segment between focus changes.
     this._segmentBuffer = ''
 
@@ -167,6 +171,9 @@ export class SegmentedInput {
     // Leave input.value as-is when it already has a real value from markup.
     // When empty, we keep it empty so the browser shows the HTML placeholder attribute
     // and the field correctly fails constraint validation (e.g. required).
+
+    // Set initial validity so a pre-filled value with partial placeholders is flagged.
+    this._updateValidity()
 
     this._onClick = this._onClickOrFocus.bind(this)
     this._onFocus = this._onFocusIn.bind(this)
@@ -226,6 +233,7 @@ export class SegmentedInput {
     this.focusSegment(index)
     this._dispatch('input')
     this._dispatch('change')
+    this._updateValidity()
   }
 
   /**
@@ -296,6 +304,7 @@ export class SegmentedInput {
     this.focusSegment(index)
     this._dispatch('input')
     this._dispatch('change')
+    this._updateValidity()
   }
 
   _dispatch (type) {
@@ -328,6 +337,9 @@ export class SegmentedInput {
       this._activeSegment = 0
       this._segmentBuffer = ''
     }
+    // Keep custom validity in sync regardless (covers the partial-placeholder case
+    // like "hh:30:10" where the empty-value case is already handled by required).
+    this._updateValidity()
   }
 
   _onClickOrFocus (event) {
@@ -362,6 +374,7 @@ export class SegmentedInput {
           values[this._activeSegment] = placeholder
           this.input.value = this._format(values)
           this._dispatch('input')
+          this._updateValidity()
           highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
         }
         break
@@ -445,6 +458,7 @@ export class SegmentedInput {
     values[this._activeSegment] = this._segmentBuffer
     this.input.value = this._format(values)
     this._dispatch('input')
+    this._updateValidity()
 
     // Re-highlight the segment (without clearing the buffer).
     highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
@@ -486,6 +500,24 @@ export class SegmentedInput {
     // 3 * 10 = 30 > 12, so no two-digit number starting with 3 is valid → advance)
     const val = parseInt(buffer, radix)
     return val * radix > seg.max
+  }
+
+  /**
+   * Synchronise the input's custom validity with the current placeholder state.
+   *
+   * - Empty value (`""`) → clear custom validity; `required` handles it natively.
+   * - Any segment still shows its placeholder (partial or fully unfilled) →
+   *   set a custom validity message so the form fails validation on submit.
+   * - All segments have real values → clear custom validity (input is valid).
+   */
+  _updateValidity () {
+    if (!this.input.value) {
+      this.input.setCustomValidity('')
+      return
+    }
+    const values = this._parse(this.input.value)
+    const hasPlaceholder = this._placeholderValues.some((p, i) => values[i] === p)
+    this.input.setCustomValidity(hasPlaceholder ? this._invalidMessage : '')
   }
 
   /**
