@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>segmented-input – demo</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 560px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    label { display: block; margin-top: 1.5rem; font-weight: bold; }
+    input {
+      font-family: monospace;
+      font-size: 1.1rem;
+      padding: 0.3rem 0.5rem;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 0.25rem;
+    }
+    input:focus { outline: 2px solid #4a90d9; }
+    small { color: #555; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <h1>segmented-input demo</h1>
+  <p>
+    Click inside any field and use <kbd>←</kbd> / <kbd>→</kbd> to navigate between segments,
+    and <kbd>↑</kbd> / <kbd>↓</kbd> to increment or decrement the focused segment.
+    <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> also cycle through segments.
+  </p>
+
+  <label>RGBA colour</label>
+  <input id="rgba" value="rgba(125, 125, 125, 0.5)" />
+  <small>Segments: r · g · b · a</small>
+
+  <label>IPv4 address</label>
+  <input id="ipv4" value="192.168.1.1" />
+  <small>Segments: octet 1 · octet 2 · octet 3 · octet 4</small>
+
+  <label>Duration (HH:MM:SS)</label>
+  <input id="duration" value="01:30:00" />
+  <small>Segments: hours · minutes · seconds</small>
+
+  <label>MAC address</label>
+  <input id="mac" value="00:1A:2B:3C:4D:5E" />
+  <small>Segments: 6 × byte (hex)</small>
+
+  <label>UUID</label>
+  <input id="uuid" value="550e8400-e29b-41d4-a716-446655440000" />
+  <small>Segments: 8-4-4-4-12</small>
+
+  <script type="module">
+    import { SegmentedInput, presets } from './index.js'
+
+    // RGBA
+    new SegmentedInput(document.getElementById('rgba'), presets.rgba)
+
+    // IPv4
+    new SegmentedInput(document.getElementById('ipv4'), presets.ipv4)
+
+    // Duration
+    new SegmentedInput(document.getElementById('duration'), presets.duration)
+
+    // MAC
+    new SegmentedInput(document.getElementById('mac'), presets.mac)
+
+    // UUID
+    new SegmentedInput(document.getElementById('uuid'), presets.uuid)
+  </script>
+</body>
+</html>
