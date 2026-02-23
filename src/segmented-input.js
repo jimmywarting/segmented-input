@@ -321,6 +321,11 @@ export class SegmentedInput {
     // setTimeout) so that the click handler that fires right after can read the value.
     if (!this.input.value) {
       this.input.value = this._formattedPlaceholder
+      // Immediately sync validity: the value is now non-empty so 'required' would
+      // pass, but the placeholder state is still incomplete — set the custom validity
+      // message now so the browser's constraint popup shows our message instead of
+      // silently treating the field as valid.
+      this._updateValidity()
     }
     // Defer the actual selection so the browser has finished placing its own cursor.
     setTimeout(() => {
