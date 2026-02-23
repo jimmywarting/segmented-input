@@ -144,4 +144,154 @@ const mac = {
   },
 }
 
-export const presets = { ipv4, ipv6, duration, rgba, uuid, mac }
+// ---------------------------------------------------------------------------
+// Time (24-hour clock)  – HH:MM:SS
+// Like duration but hours are capped at 23.
+// ---------------------------------------------------------------------------
+const time = {
+  segments: [
+    { value: '00', placeholder: 'hh', min: 0, max: 23, step: 1, pattern: /\d/ },
+    { value: '00', placeholder: 'mm', min: 0, max: 59, step: 1, pattern: /\d/ },
+    { value: '00', placeholder: 'ss', min: 0, max: 59, step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    return values.map(v => String(v).padStart(2, '0')).join(':')
+  },
+  parse (str) {
+    const parts = str.split(':')
+    while (parts.length < 3) parts.push('00')
+    return parts.slice(0, 3).map(p => p.padStart(2, '0'))
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Date  – YYYY-MM-DD
+// placeholder 'yyyy'/'mm'/'dd' uses letters blocked by pattern:/\d/
+// and none of those strings appear in the '-' separators.
+// ---------------------------------------------------------------------------
+const date = {
+  segments: [
+    { value: '2000', placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+    { value: '01',   placeholder: 'mm',   min: 1, max: 12,   step: 1, pattern: /\d/ },
+    { value: '01',   placeholder: 'dd',   min: 1, max: 31,   step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    return `${String(values[0]).padStart(4, '0')}-${String(values[1]).padStart(2, '0')}-${String(values[2]).padStart(2, '0')}`
+  },
+  parse (str) {
+    const parts = str.split('-')
+    while (parts.length < 3) parts.push('01')
+    return [parts[0].padStart(4, '0'), parts[1].padStart(2, '0'), parts[2].padStart(2, '0')]
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Credit card number  – 1234 5678 9012 3456
+// 4 groups of 4 digits separated by spaces.
+// placeholder 'nnnn' uses 'n' which is not a digit and not a space.
+// ---------------------------------------------------------------------------
+const creditCard = {
+  segments: Array.from({ length: 4 }, () => ({
+    value: '0000', placeholder: 'nnnn', min: 0, max: 9999, step: 1, maxLength: 4, pattern: /\d/,
+  })),
+  format (values) {
+    return values.map(v => String(v).padStart(4, '0')).join(' ')
+  },
+  parse (str) {
+    const parts = str.split(' ')
+    while (parts.length < 4) parts.push('0000')
+    return parts.slice(0, 4).map(p => p.padStart(4, '0'))
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Semantic version  – MAJOR.MINOR.PATCH  (e.g. 1.2.3)
+// No upper bound on any segment; maxLength: 3 caps typing at 3 digits.
+// placeholder 'n' uses a letter blocked by pattern, not '.' separator.
+// ---------------------------------------------------------------------------
+const semver = {
+  segments: [
+    { value: '1', placeholder: 'n', min: 0, step: 1, maxLength: 3, pattern: /\d/ },
+    { value: '0', placeholder: 'n', min: 0, step: 1, maxLength: 3, pattern: /\d/ },
+    { value: '0', placeholder: 'n', min: 0, step: 1, maxLength: 3, pattern: /\d/ },
+  ],
+  format (values) {
+    return values.join('.')
+  },
+  parse (str) {
+    const parts = str.split('.')
+    while (parts.length < 3) parts.push('0')
+    return parts.slice(0, 3)
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Credit card expiry date  – MM/YY
+// placeholder 'mm'/'yy' uses letters not in '/\d/' and not in '/' separator.
+// ---------------------------------------------------------------------------
+const expiryDate = {
+  segments: [
+    { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+    { value: '25', placeholder: 'yy', min: 0, max: 99, step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    return `${String(values[0]).padStart(2, '0')}/${String(values[1]).padStart(2, '0')}`
+  },
+  parse (str) {
+    const parts = str.split('/')
+    while (parts.length < 2) parts.push('00')
+    return [parts[0].padStart(2, '0'), parts[1].padStart(2, '0')]
+  },
+}
+
+// ---------------------------------------------------------------------------
+// US phone number  – (NXX) NXX-XXXX
+// Area code / exchange: placeholder 'nnn' (not a digit, not in '() -').
+// Subscriber: placeholder 'xxxx' (not a digit, not in '() -').
+// parse uses a relaxed regex so placeholder strings round-trip correctly.
+// ---------------------------------------------------------------------------
+const phone = {
+  segments: [
+    { value: '555',  placeholder: 'nnn',  min: 0, max: 999,  step: 1, maxLength: 3, pattern: /\d/ },
+    { value: '555',  placeholder: 'nnn',  min: 0, max: 999,  step: 1, maxLength: 3, pattern: /\d/ },
+    { value: '5555', placeholder: 'xxxx', min: 0, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+  ],
+  format (values) {
+    return `(${values[0]}) ${values[1]}-${values[2]}`
+  },
+  parse (str) {
+    // Relaxed capture groups so placeholder strings (e.g. 'nnn', 'xxxx') round-trip.
+    const m = str.match(/\(([^)]*)\)\s*([^-]*)-(.*)/)
+    if (m) return [m[1].trim(), m[2].trim(), m[3].trim()]
+    return ['nnn', 'nnn', 'xxxx']
+  },
+}
+
+// ---------------------------------------------------------------------------
+// HSLA colour  – hsla(H, S%, L%, A)  where H ∈ [0,360], S/L ∈ [0,100], A ∈ [0,1]
+// placeholder '--' never appears in the 'hsla(', '%, ', ')' boilerplate and
+// is blocked by both /\d/ and /[\d.]/ patterns.
+// parse uses a relaxed regex so placeholder strings round-trip correctly.
+// ---------------------------------------------------------------------------
+const hsla = {
+  segments: [
+    { value: '0', placeholder: '--', min: 0,   max: 360, step: 1,   pattern: /\d/    },
+    { value: '0', placeholder: '--', min: 0,   max: 100, step: 1,   pattern: /\d/    },
+    { value: '0', placeholder: '--', min: 0,   max: 100, step: 1,   pattern: /\d/    },
+    { value: '1', placeholder: '--', min: 0,   max: 1,   step: 0.1, pattern: /[\d.]/ },
+  ],
+  format (values) {
+    return `hsla(${values[0]}, ${values[1]}%, ${values[2]}%, ${values[3]})`
+  },
+  parse (str) {
+    // Captures content before '%' separators; accepts placeholder strings like '--'.
+    const m = str.match(/hsla?\(\s*([^,]+),\s*([^%]+)%\s*,\s*([^%]+)%\s*(?:,\s*([^)]+))?\)/)
+    if (m) return [m[1].trim(), m[2].trim(), m[3].trim(), (m[4]?.trim() ?? '1')]
+    return ['0', '0', '0', '1']
+  },
+}
+
+export const presets = {
+  ipv4, ipv6, duration, rgba, uuid, mac,
+  time, date, creditCard, semver, expiryDate, phone, hsla,
+}

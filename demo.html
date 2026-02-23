@@ -7,11 +7,12 @@
   <style>
     body {
       font-family: system-ui, sans-serif;
-      max-width: 560px;
+      max-width: 640px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
-    label { display: block; margin-top: 1.5rem; font-weight: bold; }
+    h2 { margin-top: 2rem; font-size: 1rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
+    label { display: block; margin-top: 1rem; font-weight: bold; font-size: 0.95rem; }
     input {
       font-family: monospace;
       font-size: 1.1rem;
@@ -27,7 +28,7 @@
     input:invalid { border-color: #c33; }
     /* Don't show red on an untouched empty field */
     input:placeholder-shown { border-color: #aaa; }
-    small { color: #555; font-size: 0.8rem; }
+    small { color: #777; font-size: 0.8rem; }
     button[type=submit] {
       margin-top: 1.5rem;
       padding: 0.5rem 1.5rem;
@@ -55,30 +56,74 @@
   <p>
     Click inside any field and use <kbd>←</kbd> / <kbd>→</kbd> to navigate between segments,
     <kbd>↑</kbd> / <kbd>↓</kbd> to increment or decrement, and <kbd>Backspace</kbd> to clear a segment.
-    <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> also cycle through segments.
-    Green border = valid, red border = invalid/incomplete.
+    Green border = valid · Red border = invalid/incomplete.
   </p>
 
   <form id="demo-form">
-    <label>RGBA colour</label>
-    <input id="rgba" required />
-    <small>Segments: r · g · b · a — placeholder: rgba(r, g, b, a)</small>
+
+    <h2>Networking</h2>
 
     <label>IPv4 address</label>
     <input id="ipv4" value="192.168.0.1" required />
-    <small>Segments: octet 1 · octet 2 · octet 3 · octet 4</small>
-
-    <label>Duration (HH:MM:SS)</label>
-    <input id="duration" required />
-    <small>Segments: hours · minutes · seconds — placeholder: hh:mm:ss</small>
+    <small>e.g. 192.168.0.1 — four 0–255 octets · 0 is a valid value</small>
 
     <label>MAC address</label>
     <input id="mac" value="00:1A:2B:3C:4D:5E" required />
-    <small>Segments: 6 × byte (hex) — 00 in any position is valid</small>
+    <small>e.g. 00:1A:2B:3C:4D:5E — six hex bytes · 00 is valid in any position</small>
+
+    <label>IPv6 address</label>
+    <input id="ipv6" required />
+    <small>e.g. 2001:0db8:85a3:0000:0000:8a2e:0370:7334 — eight 16-bit hex groups</small>
+
+    <h2>Date &amp; Time</h2>
+
+    <label>Date (YYYY-MM-DD)</label>
+    <input id="date" required />
+    <small>e.g. 2024-03-15 — year · month · day</small>
+
+    <label>Time (24-hour HH:MM:SS)</label>
+    <input id="time" required />
+    <small>e.g. 14:30:00 — hours 0–23 · minutes 0–59 · seconds 0–59</small>
+
+    <label>Duration (HH:MM:SS)</label>
+    <input id="duration" required />
+    <small>e.g. 01:30:00 — hours (unbounded) · minutes · seconds</small>
+
+    <h2>Colour</h2>
+
+    <label>RGBA colour</label>
+    <input id="rgba" value="rgba(125, 125, 125, 0.5)" required />
+    <small>e.g. rgba(255, 128, 0, 1) — r · g · b ∈ [0,255], a ∈ [0,1]</small>
+
+    <label>HSLA colour</label>
+    <input id="hsla" required />
+    <small>e.g. hsla(180, 50%, 75%, 1) — hue 0–360°, saturation/lightness 0–100%, alpha 0–1</small>
+
+    <h2>Identifiers</h2>
 
     <label>UUID</label>
     <input id="uuid" required />
-    <small>Segments: 8-4-4-4-12 hex groups</small>
+    <small>e.g. 550e8400-e29b-41d4-a716-446655440000 — five hex groups (8-4-4-4-12)</small>
+
+    <label>Semantic version</label>
+    <input id="semver" value="1.0.0" required />
+    <small>e.g. 2.14.3 — MAJOR · MINOR · PATCH</small>
+
+    <h2>Payment</h2>
+
+    <label>Credit card number</label>
+    <input id="creditCard" required />
+    <small>e.g. 4111 1111 1111 1111 — four groups of four digits</small>
+
+    <label>Expiry date (MM/YY)</label>
+    <input id="expiryDate" required />
+    <small>e.g. 12/28 — month 1–12 · two-digit year</small>
+
+    <h2>Other</h2>
+
+    <label>US phone number</label>
+    <input id="phone" required />
+    <small>e.g. (555) 867-5309 — area code · exchange · subscriber</small>
 
     <button type="submit">Submit</button>
   </form>
@@ -88,17 +133,29 @@
   <script type="module">
     import { SegmentedInput, presets } from './index.js'
 
-    new SegmentedInput(document.getElementById('rgba'),     presets.rgba)
-    new SegmentedInput(document.getElementById('ipv4'),     presets.ipv4)
-    new SegmentedInput(document.getElementById('duration'), presets.duration)
-    new SegmentedInput(document.getElementById('mac'),      presets.mac)
-    new SegmentedInput(document.getElementById('uuid'),     presets.uuid)
+    const fields = [
+      ['ipv4',       presets.ipv4],
+      ['mac',        presets.mac],
+      ['ipv6',       presets.ipv6],
+      ['date',       presets.date],
+      ['time',       presets.time],
+      ['duration',   presets.duration],
+      ['rgba',       presets.rgba],
+      ['hsla',       presets.hsla],
+      ['uuid',       presets.uuid],
+      ['semver',     presets.semver],
+      ['creditCard', presets.creditCard],
+      ['expiryDate', presets.expiryDate],
+      ['phone',      presets.phone],
+    ]
+
+    for (const [id, preset] of fields) {
+      new SegmentedInput(document.getElementById(id), preset)
+    }
 
     document.getElementById('demo-form').addEventListener('submit', e => {
       e.preventDefault()
-      const data = Object.fromEntries(
-        ['rgba', 'ipv4', 'duration', 'mac', 'uuid'].map(id => [id, document.getElementById(id).value])
-      )
+      const data = Object.fromEntries(fields.map(([id]) => [id, document.getElementById(id).value]))
       const out = document.getElementById('result')
       out.textContent = JSON.stringify(data, null, 2)
       out.style.display = 'block'
