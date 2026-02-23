@@ -122,11 +122,12 @@ export class SegmentedInput {
   /**
    * @param {HTMLInputElement} input - the input element to enhance
    * @param {Object} options
-   * @param {Array<{value?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp}>} options.segments
+   * @param {Array<{value?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
    *   Segment metadata.  `value` is the default; `min`/`max` clamp up/down arrow changes;
    *   `step` controls how much each arrow press changes the value (default 1);
    *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
-   *   `pattern` is an optional RegExp tested against each typed character – non-matching keys are blocked.
+   *   `pattern` is an optional RegExp tested against each typed character – non-matching keys are blocked;
+   *   `maxLength` sets the maximum number of typed characters before auto-advancing (inferred from `max` when not set).
    * @param {function(string[]): string} options.format
    *   Converts an array of segment value strings into the full display string.
    * @param {function(string): string[]} options.parse
@@ -146,6 +147,8 @@ export class SegmentedInput {
     this._format = options.format
     this._parse = options.parse
     this._activeSegment = 0
+    // Buffer accumulates typed characters for the active segment between focus changes.
+    this._segmentBuffer = ''
 
     // Set initial value if the input is empty
     if (!input.value) {
@@ -182,6 +185,7 @@ export class SegmentedInput {
   focusSegment (index) {
     const clamped = Math.max(0, Math.min(index, this.segments.length - 1))
     this._activeSegment = clamped
+    this._segmentBuffer = '' // clear typed-character buffer on every segment change
     highlightSegment(this.input, clamped, this.getSegmentRanges())
   }
 
@@ -296,23 +300,40 @@ export class SegmentedInput {
     const ranges = this.getSegmentRanges()
     const index = getCursorSegment(pos, ranges)
     this._activeSegment = index
+    this._segmentBuffer = '' // clear buffer when user clicks
     // Use setTimeout to override any native selection that the browser
     // applies after the click event fires.
     setTimeout(() => highlightSegment(this.input, index, ranges), 0)
   }
 
   _onKeydown (event) {
-    // Block printable characters that don't match the active segment's pattern.
-    // This prevents e.g. typing letters into a numeric RGBA segment.
+    // Intercept ALL printable characters: handle them ourselves so the segment
+    // always stays highlighted and we control overflow / auto-advance behaviour.
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
-      const seg = this.segments[this._activeSegment]
-      if (seg && seg.pattern && !seg.pattern.test(event.key)) {
-        event.preventDefault()
-        return
-      }
+      event.preventDefault()
+      this._handleSegmentInput(event.key)
+      return
     }
 
     switch (event.key) {
+      case 'Backspace':
+        event.preventDefault()
+        if (this._segmentBuffer.length > 0) {
+          // Remove last typed character from the buffer
+          this._segmentBuffer = this._segmentBuffer.slice(0, -1)
+          const values = this._parse(this.input.value)
+          values[this._activeSegment] = this._segmentBuffer
+          this.input.value = this._format(values)
+          this._dispatch('input')
+          highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
+        } else {
+          // Buffer already empty: move to previous segment
+          if (this._activeSegment > 0) {
+            this.focusSegment(this._activeSegment - 1)
+          }
+        }
+        break
+
       case 'ArrowLeft':
         event.preventDefault()
         this.focusSegment(this._activeSegment - 1)
@@ -351,6 +372,107 @@ export class SegmentedInput {
 
       default:
         break
+    }
+  }
+
+  /**
+   * Handle a single printable character typed by the user.
+   * Accumulates characters in `_segmentBuffer`, updates the input value,
+   * then auto-advances to the next segment when the maximum length is reached
+   * or when no further digit could produce a valid in-range value.
+   * @param {string} key - a single printable character
+   */
+  _handleSegmentInput (key) {
+    const seg = this.segments[this._activeSegment]
+    if (!seg) return
+
+    // Reject characters that don't match the segment's allowed pattern
+    if (seg.pattern && !seg.pattern.test(key)) return
+
+    const radix = seg.radix ?? 10
+    const newBuffer = this._segmentBuffer + key
+
+    // For numeric segments with a max, reject a digit that would make the
+    // value exceed the maximum; commit whatever is already buffered and advance.
+    if (seg.max !== undefined && !this._isDecimalSegment(seg)) {
+      const numVal = parseInt(newBuffer, radix)
+      if (numVal > seg.max) {
+        // Current buffer is already a valid value; advance to the next segment.
+        this._advanceSegment()
+        return
+      }
+    }
+
+    this._segmentBuffer = newBuffer
+
+    // Write the buffered text into the active segment and reformat.
+    const values = this._parse(this.input.value)
+    values[this._activeSegment] = this._segmentBuffer
+    this.input.value = this._format(values)
+    this._dispatch('input')
+
+    // Re-highlight the segment (without clearing the buffer).
+    highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
+
+    // Auto-advance when the buffer can no longer grow into a valid value.
+    if (this._shouldAutoAdvance(seg, this._segmentBuffer, radix)) {
+      this._advanceSegment()
+    }
+  }
+
+  /**
+   * Returns true when the typed buffer should trigger auto-advance.
+   * Mirrors Chrome's `<input type=date>` behaviour:
+   * - advance when the buffer is as long as the formatted maximum value; or
+   * - advance when the smallest possible next digit would already overflow max.
+   * @param {{max?: number, step?: number, maxLength?: number}} seg
+   * @param {string} buffer
+   * @param {number} radix
+   * @returns {boolean}
+   */
+  _shouldAutoAdvance (seg, buffer, radix) {
+    // Explicit maxLength always wins (used for non-numeric segments like UUID hex groups)
+    if (seg.maxLength !== undefined) return buffer.length >= seg.maxLength
+
+    if (seg.max === undefined) return false
+
+    if (this._isDecimalSegment(seg)) {
+      // For decimal segments (e.g. alpha 0–1 step 0.1) derive max display length
+      const decimals = (String(seg.step).split('.')[1] || '').length
+      const maxLen = String(seg.max.toFixed(decimals)).length
+      return buffer.length >= maxLen
+    }
+
+    // Integer / hex segment
+    const maxLen = Math.floor(seg.max).toString(radix).length
+    if (buffer.length >= maxLen) return true
+
+    // Would the smallest possible next digit overflow? (e.g. "3" in a max=12 field:
+    // 3 * 10 = 30 > 12, so no two-digit number starting with 3 is valid → advance)
+    const val = parseInt(buffer, radix)
+    return val * radix > seg.max
+  }
+
+  /**
+   * Returns true when the segment's step implies decimal values (e.g. step=0.1).
+   * @param {{step?: number}} seg
+   * @returns {boolean}
+   */
+  _isDecimalSegment (seg) {
+    return String(seg.step ?? 1).includes('.')
+  }
+
+  /**
+   * Move to the next segment (clearing the buffer).  Called after a segment
+   * value has been committed via typing or overflow.
+   */
+  _advanceSegment () {
+    if (this._activeSegment < this.segments.length - 1) {
+      this.focusSegment(this._activeSegment + 1)
+    } else {
+      // Already on the last segment: just clear the buffer and re-highlight.
+      this._segmentBuffer = ''
+      highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
     }
   }
 }

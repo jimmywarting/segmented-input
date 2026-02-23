@@ -54,7 +54,8 @@ const ipv6 = {
 // ---------------------------------------------------------------------------
 const duration = {
   segments: [
-    { value: '00', min: 0, step: 1 },
+    // Hours: no upper bound in a duration, but cap typing at 3 digits (0–999)
+    { value: '00', min: 0, step: 1, maxLength: 3 },
     { value: '00', min: 0, max: 59, step: 1 },
     { value: '00', min: 0, max: 59, step: 1 },
   ],
@@ -91,14 +92,15 @@ const rgba = {
 // ---------------------------------------------------------------------------
 // UUID  – 550e8400-e29b-41d4-a716-446655440000
 // Segment values are hex strings; no numeric min/max applies.
+// maxLength is used for auto-advance since there is no numeric max to derive from.
 // ---------------------------------------------------------------------------
 const uuid = {
   segments: [
-    { value: '00000000' },
-    { value: '0000'     },
-    { value: '0000'     },
-    { value: '0000'     },
-    { value: '000000000000' },
+    { value: '00000000', maxLength: 8,  pattern: /[0-9a-fA-F]/ },
+    { value: '0000',     maxLength: 4,  pattern: /[0-9a-fA-F]/ },
+    { value: '0000',     maxLength: 4,  pattern: /[0-9a-fA-F]/ },
+    { value: '0000',     maxLength: 4,  pattern: /[0-9a-fA-F]/ },
+    { value: '000000000000', maxLength: 12, pattern: /[0-9a-fA-F]/ },
   ],
   format (values) {
     return values.join('-')
