@@ -122,10 +122,12 @@ export class SegmentedInput {
   /**
    * @param {HTMLInputElement} input - the input element to enhance
    * @param {Object} options
-   * @param {Array<{value?: string, placeholder?: string, type?: string, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
+   * @param {Array<{value?: string, placeholder?: string, type?: string, options?: string[], min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
    *   Segment metadata.  `value` is the default numeric value used when incrementing from a blank state;
    *   `placeholder` is the display string shown in the segment when it has no real value (e.g. 'hh', 'mm', 'ss') –
    *   defaults to `value` when not set;
+   *   `options` is an array of allowed string values; ↑/↓ cycle through them and typing matches the first option
+   *   whose text starts with the pressed key (skips `min`/`max`/`pattern` processing);
    *   `min`/`max` clamp up/down arrow changes;
    *   `step` controls how much each arrow press changes the value (default 1);
    *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
@@ -272,6 +274,21 @@ export class SegmentedInput {
 
     // Text segments (type: 'text') have no numeric meaning; up/down is a no-op.
     if (seg.type === 'text') return
+
+    // Enum segments (options: [...]) cycle through the list with ↑/↓.
+    if (seg.options) {
+      if (!this.input.value) this.input.value = this._formattedPlaceholder
+      const values = this._parse(this.input.value)
+      const idx = seg.options.indexOf(values[index])
+      const newIdx = ((idx === -1 ? 0 : idx) + direction + seg.options.length) % seg.options.length
+      values[index] = seg.options[newIdx]
+      this.input.value = this._format(values)
+      this.focusSegment(index)
+      this._dispatch('input')
+      this._dispatch('change')
+      this._updateValidity()
+      return
+    }
 
     // Ensure the placeholder is shown before we start reading/writing the value.
     if (!this.input.value) this.input.value = this._formattedPlaceholder
@@ -441,6 +458,27 @@ export class SegmentedInput {
 
     // Ensure the placeholder is shown before we start reading/writing the value.
     if (!this.input.value) this.input.value = this._formattedPlaceholder
+
+    // Enum segments (options: [...]): match typed key to the first option that starts
+    // with it (case-insensitive), then immediately advance to the next segment.
+    // Single pass: prefer exact match, fall back to first prefix match.
+    if (seg.options) {
+      let match = null
+      for (const opt of seg.options) {
+        if (opt.toLowerCase() === key.toLowerCase()) { match = opt; break }
+        if (!match && opt.toLowerCase().startsWith(key.toLowerCase())) match = opt
+      }
+      if (match) {
+        const values = this._parse(this.input.value)
+        values[this._activeSegment] = match
+        this.input.value = this._format(values)
+        this._dispatch('input')
+        this._updateValidity()
+        highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
+        this._advanceSegment()
+      }
+      return
+    }
 
     // Reject characters that don't match the segment's allowed pattern
     if (seg.pattern && !seg.pattern.test(key)) return

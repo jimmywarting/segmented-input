@@ -129,9 +129,17 @@
     <input id="price" required />
     <small>e.g. $19.99 — dollars · cents</small>
 
+    <label>Currency amount (↑/↓ or type $ to pick symbol)</label>
+    <input id="currency" required />
+    <small>e.g. €12.50 — symbol ($€£¥, ↑/↓ or type $) · dollars · cents</small>
+
     <label>Math expression (x + y) / z</label>
     <input id="mathExpr" required />
     <small>e.g. (6 + 4) / 2 — three operands · ↑/↓ adjusts each</small>
+
+    <label>Calculator (↑/↓ or type + - * / to pick operator)</label>
+    <input id="calc" required />
+    <small>e.g. 3 * 4 — operand · operator (↑/↓ or type +, -, *, /) · operand</small>
 
     <label>Full name</label>
     <input id="fullName" required />
@@ -160,7 +168,9 @@
       ['expiryDate', presets.expiryDate],
       ['phone',      presets.phone],
       ['price',      presets.price],
+      ['currency',   presets.currency],
       ['mathExpr',   presets.mathExpr],
+      ['calc',       presets.calc],
       ['fullName',   presets.fullName],
     ]
 

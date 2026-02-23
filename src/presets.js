@@ -357,8 +357,54 @@ const fullName = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Calculator  – x op y  (e.g. "3 * 4")
+// The operator segment uses options: [] so ↑/↓ cycles through +, -, *, /
+// and typing any of those characters selects it.
+// placeholder '?' for the operator (not a digit, not in any operand).
+// ---------------------------------------------------------------------------
+const calc = {
+  segments: [
+    { value: '1', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
+    { value: '+', placeholder: '?',  options: ['+', '-', '*', '/'] },
+    { value: '1', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
+  ],
+  format (values) {
+    return `${values[0]} ${values[1]} ${values[2]}`
+  },
+  parse (str) {
+    // Match either a number (digits) or the placeholder '--'.
+    const m = str.match(/^(--|[\d]+)\s+([^\s]+)\s+(--|[\d]+)$/)
+    if (m) return [m[1], m[2], m[3]]
+    return ['--', '+', '--']
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Currency  – <symbol>NNN.CC  (e.g. "$19.99", "€9.99")
+// The currency-symbol segment uses options: [] so ↑/↓ cycles through $, €, £, ¥.
+// Typing $ selects $ directly; others are reachable via arrow keys.
+// placeholder '?' for the symbol (not a digit, not '.').
+// ---------------------------------------------------------------------------
+const currency = {
+  segments: [
+    { value: '$',  placeholder: '?',  options: ['$', '€', '£', '¥'] },
+    { value: '0',  placeholder: '--', min: 0, step: 1, maxLength: 5, pattern: /\d/ },
+    { value: '00', placeholder: '--', min: 0, max: 99, step: 1,      pattern: /\d/ },
+  ],
+  format (values) {
+    return `${values[0]}${values[1]}.${String(values[2]).padStart(2, '0')}`
+  },
+  parse (str) {
+    // Match optional leading currency symbol + (number or placeholder '--').(number or placeholder '--')
+    const m = str.match(/^([^\d\-]+)(--|\d+)\.(--|\d+)$/)
+    if (m) return [m[1], m[2], m[3].padStart(2, '0')]
+    return ['?', '--', '--']
+  },
+}
+
 export const presets = {
   ipv4, ipv6, duration, rgba, uuid, mac,
   time, date, creditCard, semver, expiryDate, phone, hsla,
-  price, mathExpr, fullName,
+  price, mathExpr, fullName, calc, currency,
 }
