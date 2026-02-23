@@ -171,7 +171,7 @@ const time = {
 // ---------------------------------------------------------------------------
 const date = {
   segments: [
-    { value: '2000', placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+    { value: new Date().getFullYear(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
     { value: '01',   placeholder: 'mm',   min: 1, max: 12,   step: 1, pattern: /\d/ },
     { value: '01',   placeholder: 'dd',   min: 1, max: 31,   step: 1, pattern: /\d/ },
   ],
@@ -338,14 +338,14 @@ const mathExpr = {
 // ---------------------------------------------------------------------------
 // Full name  – First Last
 // Text segments (type: 'text') have no numeric meaning; up/down arrows are no-ops.
-// placeholder '----------' uses '-' which is blocked by pattern: /[a-zA-Z]/
+// placeholder '----------' uses '-' which is blocked by pattern: /\p{L}/u
 // and does not appear in the space separator.
 // maxLength caps each name at 20 characters before auto-advancing to last name.
 // ---------------------------------------------------------------------------
 const fullName = {
   segments: [
-    { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /[a-zA-Z]/ },
-    { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /[a-zA-Z]/ },
+    { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /\p{L}/u },
+    { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /\p{L}/u },
   ],
   format (values) {
     return `${values[0]} ${values[1]}`
