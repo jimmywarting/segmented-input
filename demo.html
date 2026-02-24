@@ -85,9 +85,17 @@
     <input id="dateRange" required />
     <small>e.g. 2024-01-01 → 2024-12-31 — start date · end date</small>
 
+    <label>Date range with two 📅 buttons (click each to set start/end to today)</label>
+    <input id="dateRangePicker" required />
+    <small>YYYY-MM-DD 📅 → YYYY-MM-DD 📅 — independent "today" buttons for start and end</small>
+
     <label>Date with "today" button (action segment)</label>
     <input id="dateWithPicker" required />
     <small>YYYY-MM-DD · click the 📅 to fill in today's date</small>
+
+    <label>Clearable date (click ✕ to reset to default)</label>
+    <input id="clearable" value="2024-06-15" required />
+    <small>YYYY-MM-DD ✕ · click ✕ to reset to the pre-filled default · empty field resets via ✕ too</small>
 
     <label>Time (24-hour HH:MM:SS)</label>
     <input id="time" required />
@@ -153,6 +161,10 @@
     <input id="fullName" required />
     <small>First · Last — text segments, letters only · Tab to move between names</small>
 
+    <label>Current position (click ⊙ to fill with geolocation)</label>
+    <input id="coords" required />
+    <small>lat, long ⊙ — decimal coordinates · click ⊙ to use <code>navigator.geolocation</code></small>
+
     <button type="submit">Submit</button>
   </form>
 
@@ -205,12 +217,129 @@
       ),
     })
 
+    // dateRangePicker: two independent 📅 action segments — click each to set start/end to today
+    const yr = () => String(new Date().getFullYear())
+    const dateRangePickerInst = new SegmentedInput(document.getElementById('dateRangePicker'), {
+      segments: [
+        { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+        { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+        { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+        { value: '📅', placeholder: '📅', type: 'action',
+          onClick (instance) {
+            const t = new Date()
+            instance.setSegmentValue(0, String(t.getFullYear()))
+            instance.setSegmentValue(1, String(t.getMonth() + 1).padStart(2, '0'))
+            instance.setSegmentValue(2, String(t.getDate()).padStart(2, '0'))
+          }
+        },
+        { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+        { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+        { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+        { value: '📅', placeholder: '📅', type: 'action',
+          onClick (instance) {
+            const t = new Date()
+            instance.setSegmentValue(4, String(t.getFullYear()))
+            instance.setSegmentValue(5, String(t.getMonth() + 1).padStart(2, '0'))
+            instance.setSegmentValue(6, String(t.getDate()).padStart(2, '0'))
+          }
+        },
+      ],
+      format (values) {
+        const p4 = v => String(v).padStart(4, '0')
+        const p2 = v => String(v).padStart(2, '0')
+        // Icon placed immediately before the → so value getter produces clean "date1 → date2"
+        return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]}\u2192 ${p4(values[4])}-${p2(values[5])}-${p2(values[6])} ${values[7]}`
+      },
+      parse (str) {
+        const halves = str.split(/\s*\u2192\s*/)
+        const parseHalf = (s) => {
+          const d = s.replace(/\s*📅\s*/g, '').trim()
+          const p = d.split('-')
+          while (p.length < 3) p.push('')
+          const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
+          return [pin(p[0], 4, 'yyyy'), pin(p[1], 2, 'mm'), pin(p[2], 2, 'dd')]
+        }
+        const [sy, sm, sd] = parseHalf(halves[0] || '')
+        const [ey, em, ed] = parseHalf(halves[1] || '')
+        return [sy, sm, sd, '📅', ey, em, ed, '📅']
+      },
+    })
+
+    // clearable: date input with ✕ action that resets to defaultValue or clears to placeholder
+    const clearableInst = new SegmentedInput(document.getElementById('clearable'), {
+      segments: [
+        { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+        { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+        { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+        { value: '✕', placeholder: '✕', type: 'action',
+          onClick (instance) {
+            if (instance.input.defaultValue) {
+              // Reset to the default value pre-filled in HTML (will be normalised on next focus)
+              instance.input.value = instance.input.defaultValue
+              instance.input.setCustomValidity('')
+            } else {
+              // No default: reset each editable segment to its placeholder
+              instance.segments.forEach((seg, i) => {
+                if (seg.type !== 'action') {
+                  instance.setSegmentValue(i, seg.placeholder ?? String(seg.value ?? ''))
+                }
+              })
+            }
+          }
+        },
+      ],
+      format (values) {
+        const p4 = v => String(v).padStart(4, '0')
+        const p2 = v => String(v).padStart(2, '0')
+        return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]}`
+      },
+      parse (str) {
+        const d = str.replace(/\s*✕\s*$/, '').trim()
+        const p = d.split('-')
+        while (p.length < 3) p.push('')
+        const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
+        return [pin(p[0], 4, 'yyyy'), pin(p[1], 2, 'mm'), pin(p[2], 2, 'dd'), '✕']
+      },
+    })
+
+    // coords: lat/long with ⊙ geolocation action segment
+    const coordsInst = new SegmentedInput(document.getElementById('coords'), {
+      segments: [
+        { value: '0.000000', placeholder: 'lat', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
+        { value: '0.000000', placeholder: 'long', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
+        { value: '⊙', placeholder: '⊙', type: 'action',
+          onClick (instance) {
+            if (!navigator.geolocation) return
+            navigator.geolocation.getCurrentPosition(
+              pos => {
+                instance.setSegmentValue(0, pos.coords.latitude.toFixed(6))
+                instance.setSegmentValue(1, pos.coords.longitude.toFixed(6))
+              },
+              err => alert(`Could not get location: ${err.message}`)
+            )
+          }
+        },
+      ],
+      format (values) {
+        return `${values[0]}, ${values[1]} ${values[2]}`
+      },
+      parse (str) {
+        const clean = str.replace(/\s*⊙\s*$/, '').trim()
+        const comma = clean.indexOf(',')
+        if (comma === -1) return ['lat', 'long', '⊙']
+        return [clean.slice(0, comma).trim() || 'lat', clean.slice(comma + 1).trim() || 'long', '⊙']
+      },
+    })
+
     document.getElementById('demo-form').addEventListener('submit', e => {
       e.preventDefault()
-      // Use instance.value (the clean getter) for dateWithPicker to strip the icon.
+      // Use instance.value (the clean getter) for inputs with action segments to strip icons.
       const allEntries = [
         ...fields.map(([id]) => [id, document.getElementById(id).value]),
-        ['dateWithPicker', dateWithPickerInst.value],
+        ['dateWithPicker',    dateWithPickerInst.value],
+        ['dateRangePicker',   dateRangePickerInst.value],
+        ['clearable',         clearableInst.value],
+        ['coords',            coordsInst.value],
       ]
       const data = Object.fromEntries(allEntries)
       const out = document.getElementById('result')
