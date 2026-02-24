@@ -188,7 +188,7 @@
     }
 
     // dateWithPicker: action segment fires onClick to set today's date
-    new SegmentedInput(document.getElementById('dateWithPicker'), {
+    const dateWithPickerInst = new SegmentedInput(document.getElementById('dateWithPicker'), {
       ...presets.dateWithPicker,
       segments: presets.dateWithPicker.segments.map((s, i) =>
         i === 3
@@ -207,8 +207,12 @@
 
     document.getElementById('demo-form').addEventListener('submit', e => {
       e.preventDefault()
-      const allIds = [...fields.map(([id]) => id), 'dateWithPicker']
-      const data = Object.fromEntries(allIds.map(id => [id, document.getElementById(id).value]))
+      // Use instance.value (the clean getter) for dateWithPicker to strip the icon.
+      const allEntries = [
+        ...fields.map(([id]) => [id, document.getElementById(id).value]),
+        ['dateWithPicker', dateWithPickerInst.value],
+      ]
+      const data = Object.fromEntries(allEntries)
       const out = document.getElementById('result')
       out.textContent = JSON.stringify(data, null, 2)
       out.style.display = 'block'

@@ -193,11 +193,13 @@ export class SegmentedInput {
     // Resolution order: explicit `placeholder` string > `value` default > `min` > '0'.
     // For non-numeric segments (e.g. UUID hex groups) always set an explicit `placeholder`.
     this.#placeholderValues = this.segments.map(s => s.placeholder ?? String(s.value ?? s.min ?? 0))
-    this.#formattedPlaceholder = this.#format(this.#placeholderValues)
+    // Guarded version (ZWS around action segments) is used for input.value.
+    // Clean version (no ZWS) is used for the HTML placeholder attribute.
+    this.#formattedPlaceholder = this.#formatGuarded(this.#placeholderValues)
 
     // Set input.placeholder to the formatted segment placeholders when one is not already set.
     if (!input.placeholder) {
-      input.placeholder = this.#formattedPlaceholder
+      input.placeholder = this.#format(this.#placeholderValues)
     }
 
     // Leave input.value as-is when it already has a real value from markup.
@@ -243,12 +245,15 @@ export class SegmentedInput {
     for (let i = ranges.length - 1; i >= 0; i--) {
       if (!this.#isActionSegment(this.segments[i])) continue
       const { start, end } = ranges[i]
-      // Also strip any zero-width space(s) used as separator immediately before the icon.
+      // Strip ZWS guards the library adds on both sides of each action segment value.
       let from = start
       while (from > 0 && result.codePointAt(from - 1) === 0x200B) from--
-      result = result.slice(0, from) + result.slice(end)
+      let to = end
+      while (to < result.length && result.codePointAt(to) === 0x200B) to++
+      result = result.slice(0, from) + result.slice(to)
     }
-    return result
+    // Trim trailing whitespace that may remain from the separator before the icon.
+    return result.trimEnd()
   }
 
   /**
@@ -257,7 +262,11 @@ export class SegmentedInput {
    * @returns {Array<{start: number, end: number, value: string}>}
    */
   getSegmentRanges () {
-    return getSegmentRanges(this.input.value, this.#parse, this.#format)
+    return getSegmentRanges(
+      this.input.value,
+      v => this.#parse(this.#stripZWS(v)),
+      v => this.#formatGuarded(v),
+    )
   }
 
   /**
@@ -286,7 +295,7 @@ export class SegmentedInput {
    * @returns {string}
    */
   getSegmentValue (index) {
-    return this.#parse(this.input.value)[index]
+    return this.#currentValues()[index]
   }
 
   /**
@@ -296,9 +305,9 @@ export class SegmentedInput {
    * @param {string|number} newValue
    */
   setSegmentValue (index, newValue) {
-    const values = this.#parse(this.input.value)
+    const values = this.#currentValues()
     values[index] = String(newValue)
-    this.input.value = this.#format(values)
+    this.input.value = this.#formatGuarded(values)
     this.focusSegment(index)
     this.#dispatch('input')
     this.#dispatch('change')
@@ -349,11 +358,11 @@ export class SegmentedInput {
     // Enum segments (options: [...]) cycle through the list with ↑/↓.
     if (seg.options) {
       if (!this.input.value) this.input.value = this.#formattedPlaceholder
-      const values = this.#parse(this.input.value)
+      const values = this.#currentValues()
       const idx = seg.options.indexOf(values[index])
       const newIdx = ((idx === -1 ? 0 : idx) + direction + seg.options.length) % seg.options.length
       values[index] = seg.options[newIdx]
-      this.input.value = this.#format(values)
+      this.input.value = this.#formatGuarded(values)
       this.focusSegment(index)
       this.#dispatch('input')
       this.#dispatch('change')
@@ -365,7 +374,7 @@ export class SegmentedInput {
     if (!this.input.value) this.input.value = this.#formattedPlaceholder
 
     const radix = seg.radix ?? 10
-    const values = this.#parse(this.input.value)
+    const values = this.#currentValues()
     const step = seg.step ?? 1
 
     // Use parseFloat for base-10 (supports decimals), parseInt for other radixes
@@ -391,7 +400,7 @@ export class SegmentedInput {
       values[index] = decimals > 0 ? next.toFixed(decimals) : String(Math.round(next))
     }
 
-    this.input.value = this.#format(values)
+    this.input.value = this.#formatGuarded(values)
     this.focusSegment(index)
     this.#dispatch('input')
     this.#dispatch('change')
@@ -461,6 +470,11 @@ export class SegmentedInput {
       // message now so the browser's constraint popup shows our message instead of
       // silently treating the field as valid.
       this.#updateValidity()
+    } else {
+      // Normalize to the canonical ZWS-guarded format in case the value was set
+      // externally (e.g. directly via input.value = "2024-01-15 📅") without ZWS guards.
+      const normalized = this.#formatGuarded(this.#parse(this.#stripZWS(this.input.value)))
+      if (this.input.value !== normalized) this.input.value = normalized
     }
     // Defer the actual selection so the browser has finished placing its own cursor.
     setTimeout(() => {
@@ -490,16 +504,26 @@ export class SegmentedInput {
       // #onFocusIn just set input.value from empty, resetting selectionStart to 0.
       // Use the clientX captured at mousedown to estimate the intended click target.
       // This enables single-click action-segment firing even on an unfocused input.
+      let charPos = null
       let targetIndex = this.#activeSegment
       if (this.#pendingClickX !== null) {
-        const charPos = this.#charPosFromX(this.#pendingClickX)
+        charPos = this.#charPosFromX(this.#pendingClickX)
         targetIndex = getCursorSegment(charPos, this.getSegmentRanges())
       }
       this.#pendingClickX = null
 
       const clickedSeg = this.segments[targetIndex]
       if (this.#isActionSegment(clickedSeg)) {
-        if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+        // Only fire onClick when charPos is strictly inside the action segment (exclusive end).
+        // A click on the trailing ZWS or the right margin of the input routes to the nearest
+        // editable segment instead.
+        const r = this.getSegmentRanges()[targetIndex]
+        if (r && charPos !== null && charPos >= r.start && charPos < r.end) {
+          if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+        } else {
+          const prev = this.#findEditable(targetIndex - 1, -1)
+          if (prev !== null) this.#activeSegment = prev
+        }
         // The setTimeout queued by #onFocusIn will call focusSegment(#activeSegment).
         return
       }
@@ -517,10 +541,23 @@ export class SegmentedInput {
     const ranges = this.getSegmentRanges()
     const index = getCursorSegment(pos, ranges)
 
-    // If user clicked on an action segment, fire its onClick callback.
+    // If user clicked on an action segment, fire its onClick callback only when
+    // the cursor landed strictly inside the segment (exclusive end).
+    // A click at the right edge (trailing ZWS) or on the right margin routes to
+    // the nearest editable segment instead.
     const clickedSeg = this.segments[index]
     if (this.#isActionSegment(clickedSeg)) {
-      if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+      const r = ranges[index]
+      if (r && pos >= r.start && pos < r.end) {
+        if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+      } else {
+        const prev = this.#findEditable(index - 1, -1)
+        const fallback = prev ?? this.#findEditable(0, +1)
+        if (fallback !== null) {
+          this.#activeSegment = fallback
+          setTimeout(() => highlightSegment(this.input, fallback, this.getSegmentRanges()), 0)
+        }
+      }
       return
     }
 
@@ -548,9 +585,9 @@ export class SegmentedInput {
         {
           const placeholder = this.#placeholderValues[this.#activeSegment]
           this.#segmentBuffer = ''
-          const values = this.#parse(this.input.value)
+          const values = this.#currentValues()
           values[this.#activeSegment] = placeholder
-          this.input.value = this.#format(values)
+          this.input.value = this.#formatGuarded(values)
           this.#dispatch('input')
           this.#updateValidity()
           highlightSegment(this.input, this.#activeSegment, this.getSegmentRanges())
@@ -628,9 +665,9 @@ export class SegmentedInput {
         if (!match && opt.toLowerCase().startsWith(key.toLowerCase())) match = opt
       }
       if (match) {
-        const values = this.#parse(this.input.value)
+        const values = this.#currentValues()
         values[this.#activeSegment] = match
-        this.input.value = this.#format(values)
+        this.input.value = this.#formatGuarded(values)
         this.#dispatch('input')
         this.#updateValidity()
         highlightSegment(this.input, this.#activeSegment, this.getSegmentRanges())
@@ -659,9 +696,9 @@ export class SegmentedInput {
     this.#segmentBuffer = newBuffer
 
     // Write the buffered text into the active segment and reformat.
-    const values = this.#parse(this.input.value)
+    const values = this.#currentValues()
     values[this.#activeSegment] = this.#segmentBuffer
-    this.input.value = this.#format(values)
+    this.input.value = this.#formatGuarded(values)
     this.#dispatch('input')
     this.#updateValidity()
 
@@ -720,7 +757,7 @@ export class SegmentedInput {
       this.input.setCustomValidity('')
       return
     }
-    const values = this.#parse(this.input.value)
+    const values = this.#currentValues()
     const hasPlaceholder = this.#placeholderValues.some((p, i) =>
       !this.#isActionSegment(this.segments[i]) && values[i] === p
     )
@@ -735,7 +772,7 @@ export class SegmentedInput {
    */
   #isPlaceholderState () {
     if (!this.input.value) return true
-    const values = this.#parse(this.input.value)
+    const values = this.#currentValues()
     return this.#placeholderValues.every((p, i) => {
       if (this.#isActionSegment(this.segments[i])) return true // action segs don't affect state
       return values[i] === p
@@ -762,6 +799,66 @@ export class SegmentedInput {
    */
   #isActionSegment (seg) {
     return !!(seg && (seg.type === 'action' || typeof seg.onClick === 'function'))
+  }
+
+  /**
+   * Strip all U+200B zero-width-space characters from a string.
+   * Used to remove the ZWS guards that #formatGuarded inserts around action segments
+   * before passing the value to the developer's parse() function.
+   * @param {string} str
+   * @returns {string}
+   */
+  #stripZWS (str) {
+    return str.replace(/\u200B/g, '')
+  }
+
+  /**
+   * Like `this.#format(values)` but wraps each action segment's value in
+   * U+200B (zero-width space) guards so that:
+   *   – clicking just to the LEFT of the icon routes to the preceding segment
+   *     (ZWS creates equal-distance tie → tie-break picks left)
+   *   – clicking at the right boundary or on the right margin routes to the
+   *     preceding segment (handled by exclusive-end check in #onClickOrFocus)
+   * The ZWS chars have zero visual width and are invisible to the user.
+   * @param {string[]} values
+   * @returns {string}
+   */
+  #formatGuarded (values) {
+    const raw = this.#format(values)
+    if (!this.segments.some(s => this.#isActionSegment(s))) return raw
+
+    // Locate each action segment's value in the raw format output using the
+    // same left-to-right indexOf scan as getSegmentRanges.
+    let searchFrom = 0
+    const actionRanges = []
+    for (let i = 0; i < values.length; i++) {
+      const val = String(values[i])
+      const start = raw.indexOf(val, searchFrom)
+      if (start !== -1) {
+        if (this.#isActionSegment(this.segments[i])) {
+          actionRanges.push({ start, end: start + val.length })
+        }
+        searchFrom = start + val.length
+      }
+    }
+
+    // Wrap action values with ZWS guards (reverse order preserves offsets).
+    let result = raw
+    for (let j = actionRanges.length - 1; j >= 0; j--) {
+      const { start, end } = actionRanges[j]
+      result = result.slice(0, start) + '\u200B' + result.slice(start, end) + '\u200B' + result.slice(end)
+    }
+    return result
+  }
+
+  /**
+   * Parse the current input value into an array of segment value strings,
+   * stripping any U+200B ZWS guards first so the developer's parse() function
+   * never sees zero-width-space characters.
+   * @returns {string[]}
+   */
+  #currentValues () {
+    return this.#parse(this.#stripZWS(this.input.value))
   }
 
   /**
