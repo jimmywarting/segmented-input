@@ -118,7 +118,7 @@ export function highlightSegment (input, segmentIndex, segmentRanges) {
  *   },
  * })
  */
-export class SegmentedInput {
+export class SegmentedInput extends EventTarget {
   // ---------------------------------------------------------------------------
   // Private fields
   // ---------------------------------------------------------------------------
@@ -131,6 +131,9 @@ export class SegmentedInput {
   #placeholderJustSet
   #placeholderValues
   #formattedPlaceholder
+  /** CSS class added to `input` when the active segment is a selectable action segment.
+   *  Lets developers style `input.si-action-active::selection` differently. */
+  #actionClass
   /** clientX captured at mousedown – used to recover intended click position after
    *  the value changes in #onFocusIn for an initially-empty input. */
   #pendingClickX = null
@@ -154,6 +157,8 @@ export class SegmentedInput {
    *   `onClick` makes the segment an **action segment** – it cannot be focused, typed into, or incremented;
    *   when the user clicks on it, `onClick(instance)` is called (useful for "set to today" calendar buttons etc.);
    *   action segments are excluded from constraint-validity checks so they never block form submission;
+   *   add `selectable: true` to an action segment to make it reachable via Tab/Arrow keys; once focused,
+   *   pressing Enter triggers its `onClick` — useful for making icon buttons keyboard accessible;
    *   you may also mark a segment as `type: 'action'` to make it non-editable without (yet) providing an `onClick`;
    *   `min`/`max` clamp up/down arrow changes;
    *   `step` controls how much each arrow press changes the value (default 1);
@@ -168,6 +173,9 @@ export class SegmentedInput {
    * @param {string} [options.invalidMessage]
    *   The message passed to `setCustomValidity()` when one or more segments still show
    *   placeholder text (i.e. the value is incomplete).  Defaults to `'Please fill in all fields.'`.
+   * @param {string} [options.actionActiveClass]
+   *   CSS class added to the `<input>` when the active segment is a selectable action segment.
+   *   Defaults to `'si-action-active'`.  Use for `input.si-action-active::selection { ... }` styling.
    */
   constructor (input, options) {
     if (!input || input.tagName !== 'INPUT') {
@@ -177,12 +185,15 @@ export class SegmentedInput {
       throw new TypeError('SegmentedInput: options.format and options.parse must be functions')
     }
 
+    super() // EventTarget constructor
+
     this.input = input
     this.segments = options.segments || []
     this.#format = options.format
     this.#parse = options.parse
     this.#activeSegment = this.#findEditable(0, +1) ?? 0
     this.#invalidMessage = options.invalidMessage ?? 'Please fill in all fields.'
+    this.#actionClass = options.actionActiveClass ?? 'si-action-active'
     // Buffer accumulates typed characters for the active segment between focus changes.
     this.#segmentBuffer = ''
     // Flag set by #onFocusIn when it fills in the placeholder from an empty value;
@@ -276,17 +287,32 @@ export class SegmentedInput {
    */
   focusSegment (index) {
     let clamped = Math.max(0, Math.min(index, this.segments.length - 1))
-    // If the target is an action segment, find the nearest editable one
-    if (this.#isActionSegment(this.segments[clamped])) {
+    // If the target is a non-selectable action segment, find the nearest editable one
+    const seg = this.segments[clamped]
+    if (this.#isActionSegment(seg) && !seg.selectable) {
       const fwd = this.#findEditable(clamped + 1, +1)
       const bwd = this.#findEditable(clamped - 1, -1)
       if (fwd !== null) clamped = fwd
       else if (bwd !== null) clamped = bwd
       else return // all segments are action segments (edge case)
     }
+    // Emit blur for the segment we're leaving (only when actually changing)
+    if (clamped !== this.#activeSegment) {
+      const prevIndex = this.#activeSegment
+      const prevSeg = this.segments[prevIndex]
+      this.#emit('segmentblur', { index: prevIndex, segment: prevSeg })
+    }
     this.#activeSegment = clamped
     this.#segmentBuffer = '' // clear typed-character buffer on every segment change
+    // Add/remove the action CSS class so developers can style ::selection differently.
+    const targetSeg = this.segments[clamped]
+    if (this.#isActionSegment(targetSeg) && targetSeg.selectable) {
+      this.input.classList.add(this.#actionClass)
+    } else {
+      this.input.classList.remove(this.#actionClass)
+    }
     highlightSegment(this.input, clamped, this.getSegmentRanges())
+    this.#emit('segmentfocus', { index: clamped, segment: this.segments[clamped] })
   }
 
   /**
@@ -312,6 +338,7 @@ export class SegmentedInput {
     this.#dispatch('input')
     this.#dispatch('change')
     this.#updateValidity()
+    this.#emit('segmentchange', { index, value: String(newValue) })
   }
 
   /**
@@ -367,6 +394,7 @@ export class SegmentedInput {
       this.#dispatch('input')
       this.#dispatch('change')
       this.#updateValidity()
+      this.#emit('segmentchange', { index, value: values[index] })
       return
     }
 
@@ -405,10 +433,21 @@ export class SegmentedInput {
     this.#dispatch('input')
     this.#dispatch('change')
     this.#updateValidity()
+    this.#emit('segmentchange', { index, value: values[index] })
   }
 
   #dispatch (type) {
     this.input.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }))
+  }
+
+  /**
+   * Dispatch a CustomEvent on this SegmentedInput instance (which extends EventTarget).
+   * Listeners can be added via `instance.addEventListener(type, handler)`.
+   * @param {string} type
+   * @param {object} detail
+   */
+  #emit (type, detail) {
+    this.dispatchEvent(new CustomEvent(type, { detail }))
   }
 
   // ---------------------------------------------------------------------------
@@ -484,6 +523,11 @@ export class SegmentedInput {
   }
 
   #onBlurOut () {
+    // Remove the action class and notify listeners that the current segment is losing focus.
+    this.input.classList.remove(this.#actionClass)
+    if (this.segments.length > 0) {
+      this.#emit('segmentblur', { index: this.#activeSegment, segment: this.segments[this.#activeSegment] })
+    }
     // If the user left the field without entering any real data (all segments still
     // show their placeholder text), clear the value so the HTML placeholder attribute
     // is shown again and constraint validation (e.g. required) fails correctly.
@@ -590,20 +634,31 @@ export class SegmentedInput {
           this.input.value = this.#formatGuarded(values)
           this.#dispatch('input')
           this.#updateValidity()
+          this.#emit('segmentchange', { index: this.#activeSegment, value: placeholder })
           highlightSegment(this.input, this.#activeSegment, this.getSegmentRanges())
         }
         break
 
+      case 'Enter': {
+        // Fire onClick on a selectable action segment when Enter is pressed.
+        const seg = this.segments[this.#activeSegment]
+        if (this.#isActionSegment(seg) && seg.selectable && typeof seg.onClick === 'function') {
+          event.preventDefault()
+          seg.onClick(this)
+        }
+        break
+      }
+
       case 'ArrowLeft': {
         event.preventDefault()
-        const prev = this.#findEditable(this.#activeSegment - 1, -1)
+        const prev = this.#findNavigable(this.#activeSegment - 1, -1)
         if (prev !== null) this.focusSegment(prev)
         break
       }
 
       case 'ArrowRight': {
         event.preventDefault()
-        const next = this.#findEditable(this.#activeSegment + 1, +1)
+        const next = this.#findNavigable(this.#activeSegment + 1, +1)
         if (next !== null) this.focusSegment(next)
         break
       }
@@ -620,15 +675,15 @@ export class SegmentedInput {
 
       case 'Tab':
         if (event.shiftKey) {
-          // Shift+Tab: move to previous editable segment, or let the browser move focus out
-          const prev = this.#findEditable(this.#activeSegment - 1, -1)
+          // Shift+Tab: move to previous navigable segment, or let the browser move focus out
+          const prev = this.#findNavigable(this.#activeSegment - 1, -1)
           if (prev !== null) {
             event.preventDefault()
             this.focusSegment(prev)
           }
         } else {
-          // Tab: move to next editable segment, or let the browser move focus out
-          const next = this.#findEditable(this.#activeSegment + 1, +1)
+          // Tab: move to next navigable segment, or let the browser move focus out
+          const next = this.#findNavigable(this.#activeSegment + 1, +1)
           if (next !== null) {
             event.preventDefault()
             this.focusSegment(next)
@@ -670,6 +725,7 @@ export class SegmentedInput {
         this.input.value = this.#formatGuarded(values)
         this.#dispatch('input')
         this.#updateValidity()
+        this.#emit('segmentchange', { index: this.#activeSegment, value: match })
         highlightSegment(this.input, this.#activeSegment, this.getSegmentRanges())
         this.#advanceSegment()
       }
@@ -701,6 +757,7 @@ export class SegmentedInput {
     this.input.value = this.#formatGuarded(values)
     this.#dispatch('input')
     this.#updateValidity()
+    this.#emit('segmentchange', { index: this.#activeSegment, value: this.#segmentBuffer })
 
     // Re-highlight the segment (without clearing the buffer).
     highlightSegment(this.input, this.#activeSegment, this.getSegmentRanges())
@@ -872,6 +929,24 @@ export class SegmentedInput {
     let i = fromIndex
     while (i >= 0 && i < this.segments.length) {
       if (!this.#isActionSegment(this.segments[i])) return i
+      i += direction
+    }
+    return null
+  }
+
+  /**
+   * Like `#findEditable`, but also returns selectable action segments so that
+   * Arrow/Tab keyboard navigation can reach them.  Non-selectable action segments
+   * are still skipped.
+   * @param {number} fromIndex
+   * @param {number} direction - +1 (forward) or -1 (backward)
+   * @returns {number|null}
+   */
+  #findNavigable (fromIndex, direction) {
+    let i = fromIndex
+    while (i >= 0 && i < this.segments.length) {
+      const seg = this.segments[i]
+      if (!this.#isActionSegment(seg) || seg.selectable) return i
       i += direction
     }
     return null

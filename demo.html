@@ -28,6 +28,12 @@
     input:invalid { border-color: #c33; }
     /* Don't show red on an untouched empty field */
     input:placeholder-shown { border-color: #aaa; }
+    /* Style the selection highlight differently when a selectable action segment is active.
+       The library adds/removes the 'si-action-active' class automatically. */
+    input.si-action-active::selection {
+      background: #f0ad4e;
+      color: #000;
+    }
     small { color: #777; font-size: 0.8rem; }
     button[type=submit] {
       margin-top: 1.5rem;
@@ -89,9 +95,10 @@
     <input id="dateRangePicker" required />
     <small>YYYY-MM-DD ⏱︎ → YYYY-MM-DD ⏱︎ — independent "today" buttons for start and end</small>
 
-    <label>Date with "today" button (action segment)</label>
+    <label>Date with "today" button (action segment — Tab to icon, Enter to fire)</label>
     <input id="dateWithPicker" required />
-    <small>YYYY-MM-DD · click the ⏱︎ to fill in today's date</small>
+    <small>YYYY-MM-DD · click ⏱︎ or Tab to icon + Enter to fill in today's date · icon highlighted amber when focused</small>
+    <small id="dateWithPickerEvent" style="color:#4a90d9;display:none"></small>
 
     <label>Clearable date (click ✕ to reset to default)</label>
     <input id="clearable" value="2024-06-15" required />
@@ -200,6 +207,7 @@
     }
 
     // dateWithPicker: action segment fires onClick to set today's date
+    // The icon is selectable (Tab reaches it); Enter fires onClick; amber ::selection when active.
     const dateWithPickerInst = new SegmentedInput(document.getElementById('dateWithPicker'), {
       ...presets.dateWithPicker,
       segments: presets.dateWithPicker.segments.map((s, i) =>
@@ -215,6 +223,18 @@
             }
           : s
       ),
+    })
+    // Show segment events in the demo
+    const evLog = document.getElementById('dateWithPickerEvent')
+    dateWithPickerInst.addEventListener('segmentfocus', e => {
+      evLog.textContent = `segmentfocus → segment ${e.detail.index}`
+      evLog.style.display = 'block'
+    })
+    dateWithPickerInst.addEventListener('segmentblur', e => {
+      evLog.textContent = `segmentblur → segment ${e.detail.index}`
+    })
+    dateWithPickerInst.addEventListener('segmentchange', e => {
+      evLog.textContent = `segmentchange → segment ${e.detail.index} = "${e.detail.value}"`
     })
 
     // dateRangePicker: two independent ⏱︎ action segments — click each to set start/end to today

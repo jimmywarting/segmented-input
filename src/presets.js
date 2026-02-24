@@ -471,8 +471,9 @@ const dateWithPicker = {
     { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
     { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
     // Action segment — type: 'action' marks it as non-editable; consumer adds onClick.
+    // selectable: true makes it reachable via Tab/Arrow; Enter fires onClick.
     // The library injects \u200B guards around the icon automatically.
-    { value: '⏱︎', placeholder: '⏱︎', type: 'action' },
+    { value: '⏱︎', placeholder: '⏱︎', type: 'action', selectable: true },
   ],
   format (values) {
     const pad4 = v => String(v).padStart(4, '0')
