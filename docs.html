@@ -34,7 +34,7 @@
   <table>
     <thead><tr><th>Key</th><th>Example value</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td><code>ipv4</code></td><td><code>192.168.1.1</code></td><td>Four 0–255 octets</td></tr>
+      <tr><td><code>ipv4</code></td><td><code>192.168.1.1</code></td><td>Four 0-255 octets</td></tr>
       <tr><td><code>ipv6</code></td><td><code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code></td><td>Eight 16-bit hex groups</td></tr>
       <tr><td><code>mac</code></td><td><code>00:1A:2B:3C:4D:5E</code></td><td>Six hex bytes</td></tr>
       <tr><td><code>date</code></td><td><code>2024-03-15</code></td><td>YYYY-MM-DD</td></tr>
@@ -43,7 +43,7 @@
       <tr><td><code>time</code></td><td><code>14:30:00</code></td><td>HH:MM:SS (24-hour)</td></tr>
       <tr><td><code>duration</code></td><td><code>01:30:00</code></td><td>HH:MM:SS (hours unbounded)</td></tr>
       <tr><td><code>rgba</code></td><td><code>rgba(125, 125, 125, 0.5)</code></td><td>r/g/b ∈ [0,255], a ∈ [0,1]</td></tr>
-      <tr><td><code>hsla</code></td><td><code>hsla(180, 50%, 75%, 1)</code></td><td>h 0–360, s/l 0–100%, a 0–1</td></tr>
+      <tr><td><code>hsla</code></td><td><code>hsla(180, 50%, 75%, 1)</code></td><td>h 0-360, s/l 0-100%, a 0-1</td></tr>
       <tr><td><code>uuid</code></td><td><code>550e8400-e29b-41d4-a716-446655440000</code></td><td>Five hex groups (8-4-4-4-12)</td></tr>
       <tr><td><code>semver</code></td><td><code>2.14.3</code></td><td>MAJOR.MINOR.PATCH</td></tr>
       <tr><td><code>creditCard</code></td><td><code>4111 1111 1111 1111</code></td><td>Four groups of four digits</td></tr>
@@ -81,7 +81,7 @@ new SegmentedInput(el, presets.duration)
     { value: '0.5', min: 0, max: 1,   step: 0.1 },   // a
   ],
   format: (v) => `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${v[3]})`,
-  parse:  (s) => {
+  parse: (s) => {
     const m = s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
     return m ? [m[1], m[2], m[3], m[4] ?? '1'] : ['0', '0', '0', '1']
   },
@@ -117,13 +117,11 @@ new SegmentedInput(el, presets.duration)
     { value: '2024', placeholder: 'yyyy', min: 1, max: 9999, step: 1 },
     { value: '06',   placeholder: 'mm',   min: 1, max: 12,   step: 1 },
     { value: '15',   placeholder: 'dd',   min: 1, max: 31,   step: 1 },
-    {
-      value: '⏱︎', placeholder: '⏱︎', type: 'action',
-      onClick(instance) {
+    { value: '⏱︎',    placeholder: '⏱︎', type: 'action', onClick(instance) {
         const t = new Date()
-        instance.setSegmentValue(0, String(t.getFullYear()))
-        instance.setSegmentValue(1, String(t.getMonth() + 1).padStart(2, '0'))
-        instance.setSegmentValue(2, String(t.getDate()).padStart(2, '0'))
+        instance.setSegmentValue(0, `${t.getFullYear()}`)
+        instance.setSegmentValue(1, `${t.getMonth() + 1)}`.padStart(2, '0'))
+        instance.setSegmentValue(2, `${t.getDate()}`.padStart(2, '0'))
       },
     },
   ],
@@ -198,11 +196,11 @@ console.log(input.value)</code></pre>
 
 <pre><code class="language-js">const inst = new SegmentedInput(input, presets.date)
 
-inst.addEventListener('segmentfocus', (e) => {
-  console.log('focused segment', e.detail.index)
+inst.addEventListener('segmentfocus', evt => {
+  console.log('focused segment', evt.detail.index)
 })
-inst.addEventListener('segmentchange', (e) => {
-  console.log('segment', e.detail.index, 'changed to', e.detail.value)
+inst.addEventListener('segmentchange', evt => {
+  console.log('segment', evt.detail.index, 'changed to', evt.detail.value)
 })</code></pre>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->

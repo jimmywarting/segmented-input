@@ -274,8 +274,7 @@
       { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
       { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
       { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-      { value: '⏱︎', placeholder: '⏱︎', type: 'action',
-        onClick (instance) {
+      { value: '⏱︎', placeholder: '⏱︎', type: 'action', onClick (instance) {
           const t = new Date()
           instance.setSegmentValue(0, String(t.getFullYear()))
           instance.setSegmentValue(1, String(t.getMonth() + 1).padStart(2, '0'))
@@ -285,8 +284,7 @@
       { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
       { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
       { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-      { value: '⏱︎', placeholder: '⏱︎', type: 'action',
-        onClick (instance) {
+      { value: '⏱︎', placeholder: '⏱︎', type: 'action', onClick (instance) {
           const t = new Date()
           instance.setSegmentValue(4, String(t.getFullYear()))
           instance.setSegmentValue(5, String(t.getMonth() + 1).padStart(2, '0'))
@@ -320,8 +318,7 @@
       { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
       { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
       { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-      { value: '✕', placeholder: '✕', type: 'action',
-        onClick (instance) {
+      { value: '✕', placeholder: '✕', type: 'action', onClick (instance) {
           if (instance.input.defaultValue) {
             instance.input.value = instance.input.defaultValue
             instance.input.setCustomValidity('')
@@ -354,8 +351,7 @@
     segments: [
       { value: '0.000000', placeholder: 'lat',  type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
       { value: '0.000000', placeholder: 'long', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
-      { value: '◉', placeholder: '◉', type: 'action',
-        onClick (instance) {
+      { value: '◉', placeholder: '◉', type: 'action', onClick (instance) {
           if (!navigator.geolocation) return
           navigator.geolocation.getCurrentPosition(
             pos => {
