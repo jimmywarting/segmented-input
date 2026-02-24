@@ -123,7 +123,9 @@ import { getSegmentRanges, getCursorSegment, highlightSegment } from 'segmented-
 
 ## Demo
 
-Open `demo.html` in a browser (serve via any static file server, e.g. `npx serve .`).
+**[👉 Live demo on GitHub Pages](https://jimmywarting.github.io/segmented-input/)**
+
+Or run locally by serving the repo with any static file server, e.g. `npx serve .`.
 
 ---
 
