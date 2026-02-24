@@ -161,9 +161,9 @@
     <input id="fullName" required />
     <small>First · Last — text segments, letters only · Tab to move between names</small>
 
-    <label>Current position (click ⊙ to fill with geolocation)</label>
+    <label>Current position (click ◉ to fill with geolocation)</label>
     <input id="coords" required />
-    <small>lat, long ⊙ — decimal coordinates · click ⊙ to use <code>navigator.geolocation</code></small>
+    <small>lat, long ◉ — decimal coordinates · click ◉ to use <code>navigator.geolocation</code></small>
 
     <button type="submit">Submit</button>
   </form>
@@ -302,12 +302,12 @@
       },
     })
 
-    // coords: lat/long with ⊙ geolocation action segment
+    // coords: lat/long with ◉ geolocation action segment
     const coordsInst = new SegmentedInput(document.getElementById('coords'), {
       segments: [
         { value: '0.000000', placeholder: 'lat', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
         { value: '0.000000', placeholder: 'long', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
-        { value: '⊙', placeholder: '⊙', type: 'action',
+        { value: '◉', placeholder: '◉', type: 'action',
           onClick (instance) {
             if (!navigator.geolocation) return
             navigator.geolocation.getCurrentPosition(
@@ -324,10 +324,10 @@
         return `${values[0]}, ${values[1]} ${values[2]}`
       },
       parse (str) {
-        const clean = str.replace(/\s*⊙\s*$/, '').trim()
+        const clean = str.replace(/\s*◉\s*$/, '').trim()
         const comma = clean.indexOf(',')
-        if (comma === -1) return ['lat', 'long', '⊙']
-        return [clean.slice(0, comma).trim() || 'lat', clean.slice(comma + 1).trim() || 'long', '⊙']
+        if (comma === -1) return ['lat', 'long', '◉']
+        return [clean.slice(0, comma).trim() || 'lat', clean.slice(comma + 1).trim() || 'long', '◉']
       },
     })
 
