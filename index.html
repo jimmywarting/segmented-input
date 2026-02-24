@@ -4,749 +4,128 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark light" />
-  <title>segmented-input – live demos &amp; docs</title>
-  <style>
-    /* ── Color tokens ── */
-    :root {
-      --c-bg:           #ffffff;
-      --c-text:         #222222;
-      --c-muted:        #555555;
-      --c-small:        #777777;
-      --c-border:       #dddddd;
-      --c-input-border: #aaaaaa;
-      --c-input-valid:  #33aa33;
-      --c-input-invalid:#cc3333;
-      --c-focus:        #4a90d9;
-      --c-code-bg:      #f5f5f5;
-      --c-code-border:  #dddddd;
-      --c-inline-bg:    #f0f0f0;
-      --c-table-head:   #f0f0f0;
-      --c-result-bg:    #eeeeff;
-      --c-kbd-bg:       #eeeeee;
-      --c-kbd-border:   #bbbbbb;
-      --c-btn-bg:       #4a90d9;
-      --c-btn-hover:    #357abd;
-      --c-gh-hover:     #000000;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --c-bg:           #1a1a1a;
-        --c-text:         #e0e0e0;
-        --c-muted:        #aaaaaa;
-        --c-small:        #888888;
-        --c-border:       #444444;
-        --c-input-border: #555555;
-        --c-input-valid:  #55aa55;
-        --c-input-invalid:#ee5555;
-        --c-focus:        #5aa3e8;
-        --c-code-bg:      #2a2a2a;
-        --c-code-border:  #444444;
-        --c-inline-bg:    #2e2e2e;
-        --c-table-head:   #2e2e2e;
-        --c-result-bg:    #1e2030;
-        --c-kbd-bg:       #333333;
-        --c-kbd-border:   #555555;
-        --c-btn-bg:       #4a90d9;
-        --c-btn-hover:    #357abd;
-        --c-gh-hover:     #ffffff;
-      }
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 0 1rem 4rem;
-      background: var(--c-bg);
-      color: var(--c-text);
-      line-height: 1.6;
-    }
-    /* ── Header ── */
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      padding: 1.5rem 0 1rem;
-      border-bottom: 1px solid var(--c-border);
-    }
-    header h1 { margin: 0; font-size: 1.5rem; }
-    header a.gh-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.9rem;
-      color: var(--c-muted);
-      text-decoration: none;
-    }
-    header a.gh-link:hover { color: var(--c-gh-hover); }
-    header a.gh-link svg { width: 20px; height: 20px; fill: currentColor; }
-
-    /* ── Sections ── */
-    h2 { font-size: 1.15rem; margin-top: 2.5rem; }
-    h3 { font-size: 0.95rem; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2rem; }
-    p  { margin-top: 0.4rem; }
-
-    /* ── Inputs ── */
-    .demo-row { margin-top: 1.5rem; }
-    .demo-row label { display: block; font-weight: 600; font-size: 0.95rem; }
-    .demo-row small  { display: block; color: var(--c-small); font-size: 0.8rem; margin-top: 0.25rem; }
-    input {
-      font-family: monospace;
-      font-size: 1.05rem;
-      padding: 0.3rem 0.5rem;
-      border: 2px solid var(--c-input-border);
-      border-radius: 4px;
-      width: 100%;
-      margin-top: 0.25rem;
-      background: var(--c-bg);
-      color: var(--c-text);
-    }
-    input:focus { outline: 2px solid var(--c-focus); border-color: var(--c-focus); }
-    input:valid   { border-color: var(--c-input-valid); }
-    input:invalid { border-color: var(--c-input-invalid); }
-    input:placeholder-shown { border-color: var(--c-input-border); }
-    input.si-action-active::selection { background: #f0ad4e; color: #000; }
-
-    /* ── Code blocks ── */
-    pre {
-      background: var(--c-code-bg);
-      border: 1px solid var(--c-code-border);
-      border-radius: 4px;
-      padding: 0.9rem 1rem;
-      overflow-x: auto;
-      font-size: 0.88rem;
-      margin-top: 0.75rem;
-    }
-    code { font-family: 'SFMono-Regular', Consolas, monospace; }
-    p > code, li > code, td > code {
-      background: var(--c-inline-bg);
-      border-radius: 3px;
-      padding: 0.1em 0.35em;
-      font-size: 0.88em;
-    }
-
-    /* ── API table ── */
-    table { border-collapse: collapse; width: 100%; margin-top: 0.75rem; font-size: 0.9rem; }
-    th { background: var(--c-table-head); font-weight: 600; }
-    th, td { border: 1px solid var(--c-border); padding: 0.4rem 0.7rem; text-align: left; vertical-align: top; }
-
-    /* ── Submit / result ── */
-    button[type=submit] {
-      margin-top: 1.5rem;
-      padding: 0.5rem 1.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 4px;
-      background: var(--c-btn-bg);
-      color: #fff;
-      cursor: pointer;
-    }
-    button[type=submit]:hover { background: var(--c-btn-hover); }
-    #result {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 4px;
-      background: var(--c-result-bg);
-      font-family: monospace;
-      white-space: pre-wrap;
-      display: none;
-      font-size: 0.85rem;
-    }
-    .event-log { color: var(--c-focus); font-size: 0.8rem; display: none; margin-top: 0.25rem; }
-
-    /* ── Kbd ── */
-    kbd {
-      background: var(--c-kbd-bg);
-      border: 1px solid var(--c-kbd-border);
-      border-radius: 3px;
-      padding: 0.1em 0.4em;
-      font-family: monospace;
-      font-size: 0.85em;
-    }
-
-    /* ── Nav ── */
-    nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; }
-    nav a {
-      font-size: 0.85rem;
-      color: var(--c-focus);
-      text-decoration: none;
-      border: 1px solid var(--c-focus);
-      border-radius: 20px;
-      padding: 0.2rem 0.75rem;
-    }
-    nav a:hover { background: var(--c-focus); color: #fff; }
-  </style>
+  <title>segmented-input</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
 </head>
 <body>
 
-<header>
-  <h1>segmented-input</h1>
+<header class="site-header">
+  <a href="index.html" class="site-logo">segmented-input</a>
+  <nav class="site-nav">
+    <a href="index.html" class="active">Home</a>
+    <a href="docs.html">Docs</a>
+    <a href="demos.html">Demos</a>
+  </nav>
   <a class="gh-link" href="https://github.com/jimmywarting/segmented-input" target="_blank" rel="noopener">
-    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
-    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
-    1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
-    0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27
-    2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
-    1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01
-    2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
     GitHub
   </a>
 </header>
 
-<p>A tiny, dependency-free JavaScript library that turns any <code>&lt;input&gt;</code> element into a <strong>segmented picker</strong> — just like <code>&lt;input type="date"&gt;</code> — for any custom format.</p>
+<main class="page">
 
-<nav>
-  <a href="#install">Installation</a>
-  <a href="#quick-start">Quick start</a>
-  <a href="#presets">Presets</a>
-  <a href="#custom-format">Custom format</a>
-  <a href="#api">API</a>
-  <a href="#demos">Live demos</a>
-</nav>
+  <div class="hero">
+    <span class="hero-eyebrow">JavaScript library</span>
+    <h1>segmented-input</h1>
+    <p class="hero-lead">
+      A tiny, dependency-free library that turns any <code>&lt;input&gt;</code> into a
+      <strong>segmented picker</strong> — just like <code>&lt;input type="date"&gt;</code> —
+      for <em>any</em> custom format: IPv4, RGBA, UUID, MAC, duration, and more.
+    </p>
+    <div class="hero-ctas">
+      <a href="demos.html" class="btn btn-primary">Live demos &rarr;</a>
+      <a href="docs.html"  class="btn btn-outline">API reference</a>
+    </div>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<h2 id="install">Installation</h2>
+  <!-- ── Try it ── -->
+  <div class="try-it">
+    <h3>&#128075; Try it — click any field, then use &#8593; &#8595; to change values</h3>
+    <div class="try-grid">
+      <div>
+        <label for="try-ipv4">IPv4 address</label>
+        <input id="try-ipv4" value="192.168.0.1" />
+      </div>
+      <div>
+        <label for="try-rgba">RGBA colour</label>
+        <input id="try-rgba" value="rgba(125, 125, 125, 0.5)" />
+      </div>
+      <div>
+        <label for="try-uuid">UUID</label>
+        <input id="try-uuid" />
+      </div>
+    </div>
+  </div>
 
-<p>No build step required — import directly from a CDN or copy the files:</p>
-<pre><code>&lt;!-- Via CDN (jsDelivr) --&gt;
+  <!-- ── Features ── -->
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>&#128073; Click to select</h4>
+      <p>Click any segment to highlight it instantly. No cursor hunting.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#8593; &#8595; Increment / decrement</h4>
+      <p>Arrow keys change the focused segment, clamped to <code>min</code>/<code>max</code>.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#8592; &#8594; Navigate</h4>
+      <p>Left/right arrows and Tab move between segments, or leave the field.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#129695; Zero dependencies</h4>
+      <p>Pure ES module, ~5 kb. No build step. Drop in anywhere.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#127775; Any format</h4>
+      <p>Provide <code>parse</code> + <code>format</code> functions and define your own segments.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#9680; Dark &amp; light</h4>
+      <p>Respects <code>prefers-color-scheme</code> automatically. No JS needed.</p>
+    </div>
+  </div>
+
+  <!-- ── Installation ── -->
+  <h2 id="install">Installation</h2>
+  <p>No build step required. Import directly from a CDN or install with npm:</p>
+
+<pre><code class="language-html">&lt;!-- Via CDN (jsDelivr) --&gt;
 &lt;script type="module"&gt;
   import { SegmentedInput, presets } from 'https://cdn.jsdelivr.net/npm/segmented-input/index.js'
-&lt;/script&gt;
+&lt;/script&gt;</code></pre>
 
-&lt;!-- Or with npm --&gt;
-&lt;!-- npm install segmented-input --&gt;</code></pre>
+<pre><code class="language-js">// npm
+// npm install segmented-input
+import { SegmentedInput, presets } from 'segmented-input'</code></pre>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<h2 id="quick-start">Quick start</h2>
+  <!-- ── Quick start ── -->
+  <h2 id="quick-start">Quick start</h2>
 
-<pre><code>&lt;input id="color" value="rgba(125, 125, 125, 0.5)" /&gt;
+<pre><code class="language-html">&lt;input id="color" value="rgba(125, 125, 125, 0.5)" /&gt;
 
 &lt;script type="module"&gt;
   import { SegmentedInput, presets } from './index.js'
 
-  // Attach the RGBA preset – first click focuses the "r" segment
+  // Attach the RGBA preset — first click focuses the "r" segment
   new SegmentedInput(document.getElementById('color'), presets.rgba)
 &lt;/script&gt;</code></pre>
 
-<p>Keyboard interaction (same as the native date picker):</p>
-<ul>
-  <li><kbd>←</kbd> / <kbd>→</kbd> — move between segments</li>
-  <li><kbd>↑</kbd> / <kbd>↓</kbd> — increment / decrement the active segment</li>
-  <li><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> — cycle through segments (or leave the field)</li>
-  <li><kbd>Backspace</kbd> / <kbd>Delete</kbd> — clear the active segment</li>
-</ul>
+  <p>
+    See the <a href="docs.html">full API reference</a> for custom formats, all preset options, instance
+    methods, and events — or jump straight to the <a href="demos.html">live demos</a> to see every
+    built-in preset in action.
+  </p>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<h2 id="presets">Built-in presets</h2>
-
-<table>
-  <thead><tr><th>Key</th><th>Example value</th></tr></thead>
-  <tbody>
-    <tr><td><code>ipv4</code></td><td><code>192.168.1.1</code></td></tr>
-    <tr><td><code>ipv6</code></td><td><code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code></td></tr>
-    <tr><td><code>mac</code></td><td><code>00:1A:2B:3C:4D:5E</code></td></tr>
-    <tr><td><code>date</code></td><td><code>2024-03-15</code></td></tr>
-    <tr><td><code>time</code></td><td><code>14:30:00</code></td></tr>
-    <tr><td><code>duration</code></td><td><code>01:30:00</code></td></tr>
-    <tr><td><code>rgba</code></td><td><code>rgba(125, 125, 125, 0.5)</code></td></tr>
-    <tr><td><code>hsla</code></td><td><code>hsla(180, 50%, 75%, 1)</code></td></tr>
-    <tr><td><code>uuid</code></td><td><code>550e8400-e29b-41d4-a716-446655440000</code></td></tr>
-    <tr><td><code>semver</code></td><td><code>2.14.3</code></td></tr>
-    <tr><td><code>creditCard</code></td><td><code>4111 1111 1111 1111</code></td></tr>
-    <tr><td><code>expiryDate</code></td><td><code>12/28</code></td></tr>
-    <tr><td><code>phone</code></td><td><code>(555) 867-5309</code></td></tr>
-    <tr><td><code>price</code></td><td><code>$19.99</code></td></tr>
-  </tbody>
-</table>
-
-<pre><code>import { SegmentedInput, presets } from 'segmented-input'
-
-new SegmentedInput(el, presets.ipv4)
-new SegmentedInput(el, presets.rgba)
-new SegmentedInput(el, presets.duration)
-// …</code></pre>
-
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<h2 id="custom-format">Custom format</h2>
-
-<p>Supply a <code>format</code> function (array → string) and a <code>parse</code> function (string → array), plus one <code>segments</code> entry per segment:</p>
-
-<pre><code>new SegmentedInput(el, {
-  // Segment metadata: default value, min/max clamping, and step size
-  segments: [
-    { value: '125', min: 0, max: 255, step: 1   },   // r
-    { value: '125', min: 0, max: 255, step: 1   },   // g
-    { value: '125', min: 0, max: 255, step: 1   },   // b
-    { value: '0.5', min: 0, max: 1,   step: 0.1 },   // a
-  ],
-  format: (v) =&gt; `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${v[3]})`,
-  parse:  (s) =&gt; {
-    const m = s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
-    return m ? [m[1], m[2], m[3], m[4] ?? '1'] : ['0', '0', '0', '1']
-  },
-})</code></pre>
-
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<h2 id="api">API</h2>
-
-<h3>Constructor</h3>
-<pre><code>new SegmentedInput(inputElement, options)</code></pre>
-
-<table>
-  <thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead>
-  <tbody>
-    <tr><td><code>segments</code></td><td><code>Array</code></td><td>One entry per segment. Each entry may have <code>value</code> (default), <code>min</code>, <code>max</code>, <code>step</code>, <code>placeholder</code>, <code>type</code>, <code>maxLength</code>, <code>pattern</code>.</td></tr>
-    <tr><td><code>format</code></td><td><code>(values: string[]) =&gt; string</code></td><td>Build the display string from an array of segment values.</td></tr>
-    <tr><td><code>parse</code></td><td><code>(str: string) =&gt; string[]</code></td><td>Split the display string into segment values. Must always return the same number of elements as <code>segments</code>.</td></tr>
-  </tbody>
-</table>
-
-<h3>Instance methods</h3>
-<table>
-  <thead><tr><th>Method</th><th>Description</th></tr></thead>
-  <tbody>
-    <tr><td><code>focusSegment(index)</code></td><td>Highlight the segment at <code>index</code> (clamped).</td></tr>
-    <tr><td><code>getSegmentValue(index)</code></td><td>Return the current string value of segment <code>index</code>.</td></tr>
-    <tr><td><code>setSegmentValue(index, value)</code></td><td>Overwrite a segment value and reformat. Fires <code>input</code> + <code>change</code> events.</td></tr>
-    <tr><td><code>increment()</code></td><td>Increment the active segment.</td></tr>
-    <tr><td><code>decrement()</code></td><td>Decrement the active segment.</td></tr>
-    <tr><td><code>getSegmentRanges()</code></td><td>Return <code>{start, end, value}[]</code> for all segments in the current value.</td></tr>
-    <tr><td><code>destroy()</code></td><td>Remove event listeners.</td></tr>
-  </tbody>
-</table>
-
-<h3>Instance events</h3>
-<table>
-  <thead><tr><th>Event</th><th>Detail</th><th>Description</th></tr></thead>
-  <tbody>
-    <tr><td><code>segmentfocus</code></td><td><code>{ index }</code></td><td>Fired when a segment becomes active.</td></tr>
-    <tr><td><code>segmentblur</code></td><td><code>{ index }</code></td><td>Fired when a segment loses focus.</td></tr>
-    <tr><td><code>segmentchange</code></td><td><code>{ index, value }</code></td><td>Fired when a segment value changes.</td></tr>
-  </tbody>
-</table>
-
-<h3>Low-level helpers (also exported)</h3>
-<pre><code>import { getSegmentRanges, getCursorSegment, highlightSegment } from 'segmented-input'</code></pre>
-<table>
-  <thead><tr><th>Function</th><th>Description</th></tr></thead>
-  <tbody>
-    <tr><td><code>getSegmentRanges(value, parse, format)</code></td><td>Compute <code>{start, end, value}[]</code> for each segment.</td></tr>
-    <tr><td><code>getCursorSegment(cursorPos, segmentRanges)</code></td><td>Return the index of the segment the cursor falls in.</td></tr>
-    <tr><td><code>highlightSegment(input, index, segmentRanges)</code></td><td>Call <code>setSelectionRange</code> to highlight a segment.</td></tr>
-  </tbody>
-</table>
-
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<h2 id="demos">Live demos</h2>
-
-<p>
-  Click inside any field and use <kbd>←</kbd> / <kbd>→</kbd> to navigate between segments,
-  <kbd>↑</kbd> / <kbd>↓</kbd> to increment or decrement, and <kbd>Backspace</kbd> to clear a segment.
-  <br>Green border = valid &middot; Red border = invalid/incomplete.
-</p>
-
-<form id="demo-form">
-
-  <h3>Networking</h3>
-
-  <div class="demo-row">
-    <label for="ipv4">IPv4 address</label>
-    <input id="ipv4" value="192.168.0.1" required />
-    <small>e.g. 192.168.0.1 — four 0–255 octets</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="mac">MAC address</label>
-    <input id="mac" value="00:1A:2B:3C:4D:5E" required />
-    <small>e.g. 00:1A:2B:3C:4D:5E — six hex bytes</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="ipv6">IPv6 address</label>
-    <input id="ipv6" required />
-    <small>e.g. 2001:0db8:85a3:0000:0000:8a2e:0370:7334 — eight 16-bit hex groups</small>
-  </div>
-
-  <h3>Date &amp; Time</h3>
-
-  <div class="demo-row">
-    <label for="date">Date (YYYY-MM-DD)</label>
-    <input id="date" required />
-    <small>e.g. 2024-03-15 — year · month · day</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="dateWithPicker">Date with "today" button (action segment)</label>
-    <input id="dateWithPicker" required />
-    <small>YYYY-MM-DD ⏱︎ — Tab to icon + Enter or click ⏱︎ to fill today's date · icon highlighted amber when focused</small>
-    <small id="dateWithPickerEvent" class="event-log"></small>
-  </div>
-
-  <div class="demo-row">
-    <label for="dateRange">Date range (YYYY-MM-DD → YYYY-MM-DD)</label>
-    <input id="dateRange" required />
-    <small>e.g. 2024-01-01 → 2024-12-31</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="dateRangePicker">Date range with two ⏱︎ buttons</label>
-    <input id="dateRangePicker" required />
-    <small>YYYY-MM-DD ⏱︎ → YYYY-MM-DD ⏱︎ — independent "today" buttons for start and end</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="clearable">Clearable date (click ✕ to reset)</label>
-    <input id="clearable" value="2024-06-15" required />
-    <small>YYYY-MM-DD ✕ — click ✕ to reset to the default value</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="time">Time (24-hour HH:MM:SS)</label>
-    <input id="time" required />
-    <small>e.g. 14:30:00 — hours 0–23 · minutes 0–59 · seconds 0–59</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="duration">Duration (HH:MM:SS)</label>
-    <input id="duration" required />
-    <small>e.g. 01:30:00 — hours (unbounded) · minutes · seconds</small>
-  </div>
-
-  <h3>Colour</h3>
-
-  <div class="demo-row">
-    <label for="rgba">RGBA colour</label>
-    <input id="rgba" value="rgba(125, 125, 125, 0.5)" required />
-    <small>e.g. rgba(255, 128, 0, 1) — r · g · b ∈ [0,255], a ∈ [0,1]</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="hsla">HSLA colour</label>
-    <input id="hsla" required />
-    <small>e.g. hsla(180, 50%, 75%, 1) — hue 0–360°, saturation/lightness 0–100%, alpha 0–1</small>
-  </div>
-
-  <h3>Identifiers</h3>
-
-  <div class="demo-row">
-    <label for="uuid">UUID</label>
-    <input id="uuid" required />
-    <small>e.g. 550e8400-e29b-41d4-a716-446655440000 — five hex groups (8-4-4-4-12)</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="semver">Semantic version</label>
-    <input id="semver" value="1.0.0" required />
-    <small>e.g. 2.14.3 — MAJOR · MINOR · PATCH</small>
-  </div>
-
-  <h3>Payment</h3>
-
-  <div class="demo-row">
-    <label for="creditCard">Credit card number</label>
-    <input id="creditCard" required />
-    <small>e.g. 4111 1111 1111 1111 — four groups of four digits</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="expiryDate">Expiry date (MM/YY)</label>
-    <input id="expiryDate" required />
-    <small>e.g. 12/28 — month 1–12 · two-digit year</small>
-  </div>
-
-  <h3>Other</h3>
-
-  <div class="demo-row">
-    <label for="phone">US phone number</label>
-    <input id="phone" required />
-    <small>e.g. (555) 867-5309 — area code · exchange · subscriber</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="price">Price ($USD)</label>
-    <input id="price" required />
-    <small>e.g. $19.99 — dollars · cents</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="currency">Currency amount (↑/↓ or type $ to pick symbol)</label>
-    <input id="currency" required />
-    <small>e.g. €12.50 — symbol ($€£¥, ↑/↓ or type $) · dollars · cents</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="mathExpr">Math expression (x + y) / z</label>
-    <input id="mathExpr" required />
-    <small>e.g. (6 + 4) / 2 — three operands · ↑/↓ adjusts each</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="calc">Calculator (↑/↓ or type + - * / to pick operator)</label>
-    <input id="calc" required />
-    <small>e.g. 3 * 4 — operand · operator (↑/↓ or type +, -, *, /) · operand</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="lockToggle">Lock / Unlock toggle (selectable action — Tab+↑↓ or click to cycle)</label>
-    <input id="lockToggle" value="mysecret" />
-    <small>Selectable action with <code>options: ['🔓','🔒']</code> — ↑/↓ cycles icon, Enter/click fires handler</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="encryptMode">Encrypt / Decrypt mode (enum action — Tab+↑↓ to switch, Enter to apply)</label>
-    <input id="encryptMode" value="Hello" />
-    <small>Selectable action with <code>options: ['🔐 encrypt','🔑 decrypt']</code></small>
-  </div>
-
-  <div class="demo-row">
-    <label for="fullName">Full name</label>
-    <input id="fullName" required />
-    <small>First · Last — text segments, letters only</small>
-  </div>
-
-  <div class="demo-row">
-    <label for="coords">Current position (click ◉ to fill with geolocation)</label>
-    <input id="coords" required />
-    <small>lat, long ◉ — decimal coordinates · click ◉ to use <code>navigator.geolocation</code></small>
-  </div>
-
-  <button type="submit">Submit &amp; show values</button>
-</form>
-
-<pre id="result"></pre>
+</main>
 
 <script type="module">
   import { SegmentedInput, presets } from './index.js'
 
-  const fields = [
-    ['ipv4',       presets.ipv4],
-    ['mac',        presets.mac],
-    ['ipv6',       presets.ipv6],
-    ['date',       presets.date],
-    ['dateRange',  presets.dateRange],
-    ['time',       presets.time],
-    ['duration',   presets.duration],
-    ['rgba',       presets.rgba],
-    ['hsla',       presets.hsla],
-    ['uuid',       presets.uuid],
-    ['semver',     presets.semver],
-    ['creditCard', presets.creditCard],
-    ['expiryDate', presets.expiryDate],
-    ['phone',      presets.phone],
-    ['price',      presets.price],
-    ['currency',   presets.currency],
-    ['mathExpr',   presets.mathExpr],
-    ['calc',       presets.calc],
-    ['fullName',   presets.fullName],
-  ]
-
-  for (const [id, preset] of fields) {
-    new SegmentedInput(document.getElementById(id), preset)
-  }
-
-  // dateWithPicker: action segment fires onClick to set today's date
-  const dateWithPickerInst = new SegmentedInput(document.getElementById('dateWithPicker'), {
-    ...presets.dateWithPicker,
-    segments: presets.dateWithPicker.segments.map((s, i) =>
-      i === 3
-        ? {
-            ...s,
-            onClick (instance) {
-              const today = new Date()
-              instance.setSegmentValue(0, String(today.getFullYear()))
-              instance.setSegmentValue(1, String(today.getMonth() + 1).padStart(2, '0'))
-              instance.setSegmentValue(2, String(today.getDate()).padStart(2, '0'))
-            },
-          }
-        : s
-    ),
-  })
-  const evLog = document.getElementById('dateWithPickerEvent')
-  dateWithPickerInst.addEventListener('segmentfocus', e => {
-    evLog.textContent = `segmentfocus → segment ${e.detail.index}`
-    evLog.style.display = 'block'
-  })
-  dateWithPickerInst.addEventListener('segmentblur', e => {
-    evLog.textContent = `segmentblur → segment ${e.detail.index}`
-  })
-  dateWithPickerInst.addEventListener('segmentchange', e => {
-    evLog.textContent = `segmentchange → segment ${e.detail.index} = "${e.detail.value}"`
-  })
-
-  // dateRangePicker: two independent ⏱︎ action segments
-  const yr = () => String(new Date().getFullYear())
-  const dateRangePickerInst = new SegmentedInput(document.getElementById('dateRangePicker'), {
-    segments: [
-      { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
-      { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
-      { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-      { value: '⏱︎', placeholder: '⏱︎', type: 'action',
-        onClick (instance) {
-          const t = new Date()
-          instance.setSegmentValue(0, String(t.getFullYear()))
-          instance.setSegmentValue(1, String(t.getMonth() + 1).padStart(2, '0'))
-          instance.setSegmentValue(2, String(t.getDate()).padStart(2, '0'))
-        }
-      },
-      { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
-      { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
-      { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-      { value: '⏱︎', placeholder: '⏱︎', type: 'action',
-        onClick (instance) {
-          const t = new Date()
-          instance.setSegmentValue(4, String(t.getFullYear()))
-          instance.setSegmentValue(5, String(t.getMonth() + 1).padStart(2, '0'))
-          instance.setSegmentValue(6, String(t.getDate()).padStart(2, '0'))
-        }
-      },
-    ],
-    format (values) {
-      const p4 = v => String(v).padStart(4, '0')
-      const p2 = v => String(v).padStart(2, '0')
-      return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]} \u2192 ${p4(values[4])}-${p2(values[5])}-${p2(values[6])} ${values[7]}`
-    },
-    parse (str) {
-      const halves = str.split(/\s*\u2192\s*/)
-      const parseHalf = (s) => {
-        const d = s.replace(/\s*⏱︎\s*/g, '').trim()
-        const p = d.split('-')
-        while (p.length < 3) p.push('')
-        const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
-        return [pin(p[0], 4, 'yyyy'), pin(p[1], 2, 'mm'), pin(p[2], 2, 'dd')]
-      }
-      const [sy, sm, sd] = parseHalf(halves[0] || '')
-      const [ey, em, ed] = parseHalf(halves[1] || '')
-      return [sy, sm, sd, '⏱︎', ey, em, ed, '⏱︎']
-    },
-  })
-
-  // clearable: date with ✕ action that resets to defaultValue
-  const clearableInst = new SegmentedInput(document.getElementById('clearable'), {
-    segments: [
-      { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
-      { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
-      { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-      { value: '✕', placeholder: '✕', type: 'action',
-        onClick (instance) {
-          if (instance.input.defaultValue) {
-            instance.input.value = instance.input.defaultValue
-            instance.input.setCustomValidity('')
-          } else {
-            instance.segments.forEach((seg, i) => {
-              if (seg.type !== 'action') {
-                instance.setSegmentValue(i, seg.placeholder ?? String(seg.value ?? ''))
-              }
-            })
-          }
-        }
-      },
-    ],
-    format (values) {
-      const p4 = v => String(v).padStart(4, '0')
-      const p2 = v => String(v).padStart(2, '0')
-      return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]}`
-    },
-    parse (str) {
-      const d = str.replace(/\s*✕\s*$/, '').trim()
-      const p = d.split('-')
-      while (p.length < 3) p.push('')
-      const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
-      return [pin(p[0], 4, 'yyyy'), pin(p[1], 2, 'mm'), pin(p[2], 2, 'dd'), '✕']
-    },
-  })
-
-  // coords: lat/long with ◉ geolocation action segment
-  const coordsInst = new SegmentedInput(document.getElementById('coords'), {
-    segments: [
-      { value: '0.000000', placeholder: 'lat', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
-      { value: '0.000000', placeholder: 'long', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
-      { value: '◉', placeholder: '◉', type: 'action',
-        onClick (instance) {
-          if (!navigator.geolocation) return
-          navigator.geolocation.getCurrentPosition(
-            pos => {
-              instance.setSegmentValue(0, pos.coords.latitude.toFixed(6))
-              instance.setSegmentValue(1, pos.coords.longitude.toFixed(6))
-            },
-            err => alert(`Could not get location: ${err.message}`)
-          )
-        }
-      },
-    ],
-    format (values) { return `${values[0]}, ${values[1]} ${values[2]}` },
-    parse (str) {
-      const clean = str.replace(/\s*◉\s*$/, '').trim()
-      const comma = clean.indexOf(',')
-      if (comma === -1) return ['lat', 'long', '◉']
-      return [clean.slice(0, comma).trim() || 'lat', clean.slice(comma + 1).trim() || 'long', '◉']
-    },
-  })
-
-  // lockToggle: text + selectable action with options ['🔓','🔒']
-  const lockToggleInst = new SegmentedInput(document.getElementById('lockToggle'), {
-    segments: [
-      { value: 'mysecret', placeholder: 'secret', type: 'text', pattern: /[\w]/ },
-      {
-        value: '🔓', placeholder: '🔓',
-        type: 'action', selectable: true,
-        options: ['🔓', '🔒'],
-        onClick (inst, option) {
-          const label = option === '🔒' ? 'LOCKED 🔒' : 'UNLOCKED 🔓'
-          alert(`Action fired: ${label}\nText value: "${inst.getSegmentValue(0)}"`)
-        },
-      },
-    ],
-    format: v => `${v[0]} ${v[1]}`,
-    parse (str) {
-      const clean = str.replace(/\s*(🔓|🔒)\s*$/, '').trim()
-      const icon = /🔒$/.test(str.trimEnd()) ? '🔒' : '🔓'
-      return [clean || 'secret', icon]
-    },
-  })
-
-  // encryptMode: text + selectable action cycling between modes
-  const ENC_MODES = ['🔐 encrypt', '🔑 decrypt']
-  const encryptModeInst = new SegmentedInput(document.getElementById('encryptMode'), {
-    segments: [
-      { value: 'Hello', placeholder: 'text', type: 'text', pattern: /[\w\s]/ },
-      {
-        value: ENC_MODES[0], placeholder: ENC_MODES[0],
-        type: 'action', selectable: true,
-        options: ENC_MODES,
-        onClick (inst, option) {
-          const text = inst.getSegmentValue(0)
-          const mode = option ?? ENC_MODES[0]
-          alert(`Mode: ${mode}\nInput text: "${text}"`)
-        },
-      },
-    ],
-    format: v => `${v[0]} | ${v[1]}`,
-    parse (str) {
-      const mode = ENC_MODES.find(m => str.includes(m)) ?? ENC_MODES[0]
-      const modePattern = new RegExp(`\\s*\\|\\s*(${ENC_MODES.map(m => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*$`)
-      const text = str.replace(modePattern, '').trim() || 'text'
-      return [text, mode]
-    },
-  })
-
-  document.getElementById('demo-form').addEventListener('submit', e => {
-    e.preventDefault()
-    const allEntries = [
-      ...fields.map(([id]) => [id, document.getElementById(id).value]),
-      ['dateWithPicker',  dateWithPickerInst.value],
-      ['dateRangePicker', dateRangePickerInst.value],
-      ['clearable',       clearableInst.value],
-      ['coords',          coordsInst.value],
-      ['lockToggle',      lockToggleInst.value],
-      ['encryptMode',     encryptModeInst.value],
-    ]
-    const out = document.getElementById('result')
-    out.textContent = JSON.stringify(Object.fromEntries(allEntries), null, 2)
-    out.style.display = 'block'
-  })
+  new SegmentedInput(document.getElementById('try-ipv4'), presets.ipv4)
+  new SegmentedInput(document.getElementById('try-rgba'), presets.rgba)
+  new SegmentedInput(document.getElementById('try-uuid'), presets.uuid)
 </script>
+
 </body>
 </html>

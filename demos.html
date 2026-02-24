@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Demos — segmented-input</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">segmented-input</a>
+  <nav class="site-nav">
+    <a href="index.html">Home</a>
+    <a href="docs.html">Docs</a>
+    <a href="demos.html" class="active">Demos</a>
+  </nav>
+  <a class="gh-link" href="https://github.com/jimmywarting/segmented-input" target="_blank" rel="noopener">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+</header>
+
+<main class="page">
+
+  <h1>Live Demos</h1>
+  <p>
+    Click inside any field and use <kbd>&larr;</kbd> / <kbd>&rarr;</kbd> to navigate between segments,
+    <kbd>&uarr;</kbd> / <kbd>&darr;</kbd> to increment or decrement, and <kbd>Backspace</kbd> to clear.
+    Green border = valid &middot; Red border = invalid/incomplete.
+  </p>
+
+  <form id="demo-form">
+
+    <!-- ── Networking ── -->
+    <h2>Networking</h2>
+
+    <div class="demo-row">
+      <label for="ipv4">IPv4 address</label>
+      <input id="ipv4" value="192.168.0.1" required />
+      <small>e.g. 192.168.0.1 — four 0–255 octets</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="mac">MAC address</label>
+      <input id="mac" value="00:1A:2B:3C:4D:5E" required />
+      <small>e.g. 00:1A:2B:3C:4D:5E — six hex bytes</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="ipv6">IPv6 address</label>
+      <input id="ipv6" required />
+      <small>e.g. 2001:0db8:85a3:0000:0000:8a2e:0370:7334 — eight 16-bit hex groups</small>
+    </div>
+
+    <!-- ── Date & Time ── -->
+    <h2>Date &amp; Time</h2>
+
+    <div class="demo-row">
+      <label for="date">Date (YYYY-MM-DD)</label>
+      <input id="date" required />
+      <small>e.g. 2024-03-15 — year · month · day</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="dateWithPicker">Date with "today" button (action segment)</label>
+      <input id="dateWithPicker" required />
+      <small>YYYY-MM-DD ⏱︎ — Tab to icon, then Enter or click to fill today's date · icon highlighted amber when focused</small>
+      <small id="dateWithPickerEvent" class="event-log"></small>
+    </div>
+
+    <div class="demo-row">
+      <label for="dateRange">Date range</label>
+      <input id="dateRange" required />
+      <small>e.g. 2024-01-01 → 2024-12-31</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="dateRangePicker">Date range with two ⏱︎ buttons</label>
+      <input id="dateRangePicker" required />
+      <small>YYYY-MM-DD ⏱︎ → YYYY-MM-DD ⏱︎ — independent "today" buttons for start and end</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="clearable">Clearable date (click ✕ to reset)</label>
+      <input id="clearable" value="2024-06-15" required />
+      <small>YYYY-MM-DD ✕ — click ✕ to reset to the default value</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="time">Time (24-hour HH:MM:SS)</label>
+      <input id="time" required />
+      <small>e.g. 14:30:00 — hours 0–23 · minutes 0–59 · seconds 0–59</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="duration">Duration (HH:MM:SS)</label>
+      <input id="duration" required />
+      <small>e.g. 01:30:00 — hours (unbounded) · minutes · seconds</small>
+    </div>
+
+    <!-- ── Colour ── -->
+    <h2>Colour</h2>
+
+    <div class="demo-row">
+      <label for="rgba">RGBA colour</label>
+      <input id="rgba" value="rgba(125, 125, 125, 0.5)" required />
+      <small>e.g. rgba(255, 128, 0, 1) — r · g · b ∈ [0,255], a ∈ [0,1]</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="hsla">HSLA colour</label>
+      <input id="hsla" required />
+      <small>e.g. hsla(180, 50%, 75%, 1) — hue 0–360°, saturation/lightness 0–100%, alpha 0–1</small>
+    </div>
+
+    <!-- ── Identifiers ── -->
+    <h2>Identifiers</h2>
+
+    <div class="demo-row">
+      <label for="uuid">UUID</label>
+      <input id="uuid" required />
+      <small>e.g. 550e8400-e29b-41d4-a716-446655440000 — five hex groups (8-4-4-4-12)</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="semver">Semantic version</label>
+      <input id="semver" value="1.0.0" required />
+      <small>e.g. 2.14.3 — MAJOR · MINOR · PATCH</small>
+    </div>
+
+    <!-- ── Payment ── -->
+    <h2>Payment</h2>
+
+    <div class="demo-row">
+      <label for="creditCard">Credit card number</label>
+      <input id="creditCard" required />
+      <small>e.g. 4111 1111 1111 1111 — four groups of four digits</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="expiryDate">Expiry date (MM/YY)</label>
+      <input id="expiryDate" required />
+      <small>e.g. 12/28 — month 1–12 · two-digit year</small>
+    </div>
+
+    <!-- ── Other ── -->
+    <h2>Other</h2>
+
+    <div class="demo-row">
+      <label for="phone">US phone number</label>
+      <input id="phone" required />
+      <small>e.g. (555) 867-5309 — area code · exchange · subscriber</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="price">Price ($USD)</label>
+      <input id="price" required />
+      <small>e.g. $19.99 — dollars · cents</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="currency">Currency amount (↑/↓ or type $ to pick symbol)</label>
+      <input id="currency" required />
+      <small>e.g. €12.50 — symbol ($€£¥, ↑/↓ or type $) · dollars · cents</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="mathExpr">Math expression (x + y) / z</label>
+      <input id="mathExpr" required />
+      <small>e.g. (6 + 4) / 2 — three operands · ↑/↓ adjusts each</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="calc">Calculator (↑/↓ or type + - * / to pick operator)</label>
+      <input id="calc" required />
+      <small>e.g. 3 * 4 — operand · operator (↑/↓ or type +, -, *, /) · operand</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="lockToggle">Lock / Unlock toggle (selectable action — Tab+↑↓ or click to cycle)</label>
+      <input id="lockToggle" value="mysecret" />
+      <small>Selectable action with <code>options: ['🔓','🔒']</code> — ↑/↓ cycles icon, Enter/click fires handler</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="encryptMode">Encrypt / Decrypt mode (enum action — Tab+↑↓ to switch, Enter to apply)</label>
+      <input id="encryptMode" value="Hello" />
+      <small>Selectable action with <code>options: ['🔐 encrypt','🔑 decrypt']</code></small>
+    </div>
+
+    <div class="demo-row">
+      <label for="fullName">Full name</label>
+      <input id="fullName" required />
+      <small>First · Last — text segments, letters only</small>
+    </div>
+
+    <div class="demo-row">
+      <label for="coords">Current position (click ◉ to fill with geolocation)</label>
+      <input id="coords" required />
+      <small>lat, long ◉ — decimal coordinates · click ◉ to use <code>navigator.geolocation</code></small>
+    </div>
+
+    <button type="submit">Submit &amp; show values</button>
+  </form>
+
+  <pre id="result"></pre>
+
+</main>
+
+<script type="module">
+  import { SegmentedInput, presets } from './index.js'
+
+  const fields = [
+    ['ipv4',       presets.ipv4],
+    ['mac',        presets.mac],
+    ['ipv6',       presets.ipv6],
+    ['date',       presets.date],
+    ['dateRange',  presets.dateRange],
+    ['time',       presets.time],
+    ['duration',   presets.duration],
+    ['rgba',       presets.rgba],
+    ['hsla',       presets.hsla],
+    ['uuid',       presets.uuid],
+    ['semver',     presets.semver],
+    ['creditCard', presets.creditCard],
+    ['expiryDate', presets.expiryDate],
+    ['phone',      presets.phone],
+    ['price',      presets.price],
+    ['currency',   presets.currency],
+    ['mathExpr',   presets.mathExpr],
+    ['calc',       presets.calc],
+    ['fullName',   presets.fullName],
+  ]
+
+  for (const [id, preset] of fields) {
+    new SegmentedInput(document.getElementById(id), preset)
+  }
+
+  // dateWithPicker: action segment fires onClick to set today's date
+  const dateWithPickerInst = new SegmentedInput(document.getElementById('dateWithPicker'), {
+    ...presets.dateWithPicker,
+    segments: presets.dateWithPicker.segments.map((s, i) =>
+      i === 3
+        ? {
+            ...s,
+            onClick (instance) {
+              const today = new Date()
+              instance.setSegmentValue(0, String(today.getFullYear()))
+              instance.setSegmentValue(1, String(today.getMonth() + 1).padStart(2, '0'))
+              instance.setSegmentValue(2, String(today.getDate()).padStart(2, '0'))
+            },
+          }
+        : s
+    ),
+  })
+  const evLog = document.getElementById('dateWithPickerEvent')
+  dateWithPickerInst.addEventListener('segmentfocus', e => {
+    evLog.textContent = `segmentfocus → segment ${e.detail.index}`
+    evLog.style.display = 'block'
+  })
+  dateWithPickerInst.addEventListener('segmentblur', e => {
+    evLog.textContent = `segmentblur → segment ${e.detail.index}`
+  })
+  dateWithPickerInst.addEventListener('segmentchange', e => {
+    evLog.textContent = `segmentchange → segment ${e.detail.index} = "${e.detail.value}"`
+  })
+
+  // dateRangePicker: two independent ⏱︎ action segments
+  const yr = () => String(new Date().getFullYear())
+  const dateRangePickerInst = new SegmentedInput(document.getElementById('dateRangePicker'), {
+    segments: [
+      { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+      { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+      { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+      { value: '⏱︎', placeholder: '⏱︎', type: 'action',
+        onClick (instance) {
+          const t = new Date()
+          instance.setSegmentValue(0, String(t.getFullYear()))
+          instance.setSegmentValue(1, String(t.getMonth() + 1).padStart(2, '0'))
+          instance.setSegmentValue(2, String(t.getDate()).padStart(2, '0'))
+        }
+      },
+      { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+      { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+      { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+      { value: '⏱︎', placeholder: '⏱︎', type: 'action',
+        onClick (instance) {
+          const t = new Date()
+          instance.setSegmentValue(4, String(t.getFullYear()))
+          instance.setSegmentValue(5, String(t.getMonth() + 1).padStart(2, '0'))
+          instance.setSegmentValue(6, String(t.getDate()).padStart(2, '0'))
+        }
+      },
+    ],
+    format (values) {
+      const p4 = v => String(v).padStart(4, '0')
+      const p2 = v => String(v).padStart(2, '0')
+      return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]} \u2192 ${p4(values[4])}-${p2(values[5])}-${p2(values[6])} ${values[7]}`
+    },
+    parse (str) {
+      const halves = str.split(/\s*\u2192\s*/)
+      const parseHalf = (s) => {
+        const d = s.replace(/\s*⏱︎\s*/g, '').trim()
+        const p = d.split('-')
+        while (p.length < 3) p.push('')
+        const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
+        return [pin(p[0], 4, 'yyyy'), pin(p[1], 2, 'mm'), pin(p[2], 2, 'dd')]
+      }
+      const [sy, sm, sd] = parseHalf(halves[0] || '')
+      const [ey, em, ed] = parseHalf(halves[1] || '')
+      return [sy, sm, sd, '⏱︎', ey, em, ed, '⏱︎']
+    },
+  })
+
+  // clearable: date with ✕ action that resets to defaultValue
+  const clearableInst = new SegmentedInput(document.getElementById('clearable'), {
+    segments: [
+      { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+      { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+      { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+      { value: '✕', placeholder: '✕', type: 'action',
+        onClick (instance) {
+          if (instance.input.defaultValue) {
+            instance.input.value = instance.input.defaultValue
+            instance.input.setCustomValidity('')
+          } else {
+            instance.segments.forEach((seg, i) => {
+              if (seg.type !== 'action') {
+                instance.setSegmentValue(i, seg.placeholder ?? String(seg.value ?? ''))
+              }
+            })
+          }
+        }
+      },
+    ],
+    format (values) {
+      const p4 = v => String(v).padStart(4, '0')
+      const p2 = v => String(v).padStart(2, '0')
+      return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]}`
+    },
+    parse (str) {
+      const d = str.replace(/\s*✕\s*$/, '').trim()
+      const p = d.split('-')
+      while (p.length < 3) p.push('')
+      const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
+      return [pin(p[0], 4, 'yyyy'), pin(p[1], 2, 'mm'), pin(p[2], 2, 'dd'), '✕']
+    },
+  })
+
+  // coords: lat/long with ◉ geolocation action segment
+  const coordsInst = new SegmentedInput(document.getElementById('coords'), {
+    segments: [
+      { value: '0.000000', placeholder: 'lat',  type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
+      { value: '0.000000', placeholder: 'long', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
+      { value: '◉', placeholder: '◉', type: 'action',
+        onClick (instance) {
+          if (!navigator.geolocation) return
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              instance.setSegmentValue(0, pos.coords.latitude.toFixed(6))
+              instance.setSegmentValue(1, pos.coords.longitude.toFixed(6))
+            },
+            err => alert(`Could not get location: ${err.message}`)
+          )
+        }
+      },
+    ],
+    format (values) { return `${values[0]}, ${values[1]} ${values[2]}` },
+    parse (str) {
+      const clean = str.replace(/\s*◉\s*$/, '').trim()
+      const comma = clean.indexOf(',')
+      if (comma === -1) return ['lat', 'long', '◉']
+      return [clean.slice(0, comma).trim() || 'lat', clean.slice(comma + 1).trim() || 'long', '◉']
+    },
+  })
+
+  // lockToggle: text + selectable action with options ['🔓','🔒']
+  const lockToggleInst = new SegmentedInput(document.getElementById('lockToggle'), {
+    segments: [
+      { value: 'mysecret', placeholder: 'secret', type: 'text', pattern: /[\w]/ },
+      {
+        value: '🔓', placeholder: '🔓',
+        type: 'action', selectable: true,
+        options: ['🔓', '🔒'],
+        onClick (inst, option) {
+          const label = option === '🔒' ? 'LOCKED 🔒' : 'UNLOCKED 🔓'
+          alert(`Action fired: ${label}\nText value: "${inst.getSegmentValue(0)}"`)
+        },
+      },
+    ],
+    format: v => `${v[0]} ${v[1]}`,
+    parse (str) {
+      const clean = str.replace(/\s*(🔓|🔒)\s*$/, '').trim()
+      const icon = /🔒$/.test(str.trimEnd()) ? '🔒' : '🔓'
+      return [clean || 'secret', icon]
+    },
+  })
+
+  // encryptMode: text + selectable action cycling between modes
+  const ENC_MODES = ['🔐 encrypt', '🔑 decrypt']
+  const encryptModeInst = new SegmentedInput(document.getElementById('encryptMode'), {
+    segments: [
+      { value: 'Hello', placeholder: 'text', type: 'text', pattern: /[\w\s]/ },
+      {
+        value: ENC_MODES[0], placeholder: ENC_MODES[0],
+        type: 'action', selectable: true,
+        options: ENC_MODES,
+        onClick (inst, option) {
+          const text = inst.getSegmentValue(0)
+          const mode = option ?? ENC_MODES[0]
+          alert(`Mode: ${mode}\nInput text: "${text}"`)
+        },
+      },
+    ],
+    format: v => `${v[0]} | ${v[1]}`,
+    parse (str) {
+      const mode = ENC_MODES.find(m => str.includes(m)) ?? ENC_MODES[0]
+      const modePattern = new RegExp(`\\s*\\|\\s*(${ENC_MODES.map(m => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*$`)
+      const text = str.replace(modePattern, '').trim() || 'text'
+      return [text, mode]
+    },
+  })
+
+  document.getElementById('demo-form').addEventListener('submit', e => {
+    e.preventDefault()
+    const allEntries = [
+      ...fields.map(([id]) => [id, document.getElementById(id).value]),
+      ['dateWithPicker',  dateWithPickerInst.value],
+      ['dateRangePicker', dateRangePickerInst.value],
+      ['clearable',       clearableInst.value],
+      ['coords',          coordsInst.value],
+      ['lockToggle',      lockToggleInst.value],
+      ['encryptMode',     encryptModeInst.value],
+    ]
+    const out = document.getElementById('result')
+    out.textContent = JSON.stringify(Object.fromEntries(allEntries), null, 2)
+    out.style.display = 'block'
+  })
+</script>
+
+</body>
+</html>
