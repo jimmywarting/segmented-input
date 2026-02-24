@@ -85,6 +85,10 @@
     <input id="dateRange" required />
     <small>e.g. 2024-01-01 → 2024-12-31 — start date · end date</small>
 
+    <label>Date with "today" button (action segment)</label>
+    <input id="dateWithPicker" required />
+    <small>YYYY-MM-DD · click the 📅 to fill in today's date</small>
+
     <label>Time (24-hour HH:MM:SS)</label>
     <input id="time" required />
     <small>e.g. 14:30:00 — hours 0–23 · minutes 0–59 · seconds 0–59</small>
@@ -183,9 +187,28 @@
       new SegmentedInput(document.getElementById(id), preset)
     }
 
+    // dateWithPicker: action segment fires onClick to set today's date
+    new SegmentedInput(document.getElementById('dateWithPicker'), {
+      ...presets.dateWithPicker,
+      segments: presets.dateWithPicker.segments.map((s, i) =>
+        i === 3
+          ? {
+              ...s,
+              onClick (instance) {
+                const today = new Date()
+                instance.setSegmentValue(0, String(today.getFullYear()))
+                instance.setSegmentValue(1, String(today.getMonth() + 1).padStart(2, '0'))
+                instance.setSegmentValue(2, String(today.getDate()).padStart(2, '0'))
+              },
+            }
+          : s
+      ),
+    })
+
     document.getElementById('demo-form').addEventListener('submit', e => {
       e.preventDefault()
-      const data = Object.fromEntries(fields.map(([id]) => [id, document.getElementById(id).value]))
+      const allIds = [...fields.map(([id]) => id), 'dateWithPicker']
+      const data = Object.fromEntries(allIds.map(id => [id, document.getElementById(id).value]))
       const out = document.getElementById('result')
       out.textContent = JSON.stringify(data, null, 2)
       out.style.display = 'block'

@@ -445,8 +445,48 @@ const dateRange = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Date with picker button  – YYYY-MM-DD 📅
+//
+// Three editable date segments followed by an action segment whose placeholder
+// is ' 📅'.  The action segment is excluded from validity checks so it never
+// blocks form submission.
+//
+// The consumer MUST supply an onClick handler when instantiating; the preset
+// itself leaves onClick undefined (no-op) so it can be spread:
+//
+//   new SegmentedInput(el, {
+//     ...presets.dateWithPicker,
+//     segments: presets.dateWithPicker.segments.map((s, i) =>
+//       i === 3 ? { ...s, onClick (inst) { /* set today's date */ } } : s
+//     ),
+//   })
+// ---------------------------------------------------------------------------
+const dateWithPicker = {
+  segments: [
+    { value: String(new Date().getFullYear()), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
+    { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
+    { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
+    // Action segment — type: 'action' marks it as non-editable; consumer adds onClick.
+    { value: ' 📅', placeholder: ' 📅', type: 'action' },
+  ],
+  format (values) {
+    const pad4 = v => String(v).padStart(4, '0')
+    const pad2 = v => String(v).padStart(2, '0')
+    return `${pad4(values[0])}-${pad2(values[1])}-${pad2(values[2])}${values[3]}`
+  },
+  parse (str) {
+    // Strip the action segment icon before splitting on '-'
+    const dateStr = str.replace(/ 📅$/, '').trim()
+    const parts = dateStr.split('-')
+    while (parts.length < 3) parts.push('01')
+    const padIfNum = (v, len) => /^\d+$/.test(v) ? v.padStart(len, '0') : v
+    return [padIfNum(parts[0], 4), padIfNum(parts[1], 2), padIfNum(parts[2], 2), ' 📅']
+  },
+}
+
 export const presets = {
   ipv4, ipv6, duration, rgba, uuid, mac,
-  time, date, dateRange, creditCard, semver, expiryDate, phone, hsla,
+  time, date, dateRange, dateWithPicker, creditCard, semver, expiryDate, phone, hsla,
   price, mathExpr, fullName, calc, currency,
 }

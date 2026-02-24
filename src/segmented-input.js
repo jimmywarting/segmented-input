@@ -122,12 +122,16 @@ export class SegmentedInput {
   /**
    * @param {HTMLInputElement} input - the input element to enhance
    * @param {Object} options
-   * @param {Array<{value?: string, placeholder?: string, type?: string, options?: string[], min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
+   * @param {Array<{value?: string, placeholder?: string, type?: string, options?: string[], onClick?: Function, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
    *   Segment metadata.  `value` is the default numeric value used when incrementing from a blank state;
    *   `placeholder` is the display string shown in the segment when it has no real value (e.g. 'hh', 'mm', 'ss') –
    *   defaults to `value` when not set;
    *   `options` is an array of allowed string values; ↑/↓ cycle through them and typing matches the first option
    *   whose text starts with the pressed key (skips `min`/`max`/`pattern` processing);
+   *   `onClick` makes the segment an **action segment** – it cannot be focused, typed into, or incremented;
+   *   when the user clicks on it, `onClick(instance)` is called (useful for "set to today" calendar buttons etc.);
+   *   action segments are excluded from constraint-validity checks so they never block form submission;
+   *   you may also mark a segment as `type: 'action'` to make it non-editable without (yet) providing an `onClick`;
    *   `min`/`max` clamp up/down arrow changes;
    *   `step` controls how much each arrow press changes the value (default 1);
    *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
@@ -154,10 +158,13 @@ export class SegmentedInput {
     this.segments = options.segments || []
     this._format = options.format
     this._parse = options.parse
-    this._activeSegment = 0
+    this._activeSegment = this._findEditable(0, +1) ?? 0
     this._invalidMessage = options.invalidMessage ?? 'Please fill in all fields.'
     // Buffer accumulates typed characters for the active segment between focus changes.
     this._segmentBuffer = ''
+    // Flag set by _onFocusIn when it fills in the placeholder from an empty value;
+    // cleared by _onClickOrFocus to prevent false action-segment activations.
+    this._placeholderJustSet = false
 
     // Compute the placeholder values once (used for Backspace reset and the HTML placeholder).
     // Resolution order: explicit `placeholder` string > `value` default > `min` > '0'.
@@ -207,7 +214,15 @@ export class SegmentedInput {
    * @param {number} index
    */
   focusSegment (index) {
-    const clamped = Math.max(0, Math.min(index, this.segments.length - 1))
+    let clamped = Math.max(0, Math.min(index, this.segments.length - 1))
+    // If the target is an action segment, find the nearest editable one
+    if (this._isActionSegment(this.segments[clamped])) {
+      const fwd = this._findEditable(clamped + 1, +1)
+      const bwd = this._findEditable(clamped - 1, -1)
+      if (fwd !== null) clamped = fwd
+      else if (bwd !== null) clamped = bwd
+      else return // all segments are action segments (edge case)
+    }
     this._activeSegment = clamped
     this._segmentBuffer = '' // clear typed-character buffer on every segment change
     highlightSegment(this.input, clamped, this.getSegmentRanges())
@@ -271,6 +286,9 @@ export class SegmentedInput {
   _adjustSegment (index, direction) {
     const seg = this.segments[index]
     if (!seg) return
+
+    // Action segments cannot be adjusted.
+    if (this._isActionSegment(seg)) return
 
     // Text segments (type: 'text') have no numeric meaning; up/down is a no-op.
     if (seg.type === 'text') return
@@ -341,6 +359,11 @@ export class SegmentedInput {
     // setTimeout) so that the click handler that fires right after can read the value.
     if (!this.input.value) {
       this.input.value = this._formattedPlaceholder
+      // Set this flag so _onClickOrFocus knows the value was just set from empty;
+      // without this guard, the browser would place the cursor at the end of the
+      // newly-set placeholder string, which can land on an action segment and
+      // incorrectly fire its onClick.
+      this._placeholderJustSet = true
       // Immediately sync validity: the value is now non-empty so 'required' would
       // pass, but the placeholder state is still incomplete — set the custom validity
       // message now so the browser's constraint popup shows our message instead of
@@ -349,6 +372,7 @@ export class SegmentedInput {
     }
     // Defer the actual selection so the browser has finished placing its own cursor.
     setTimeout(() => {
+      this._placeholderJustSet = false
       this.focusSegment(this._activeSegment)
     }, 0)
   }
@@ -368,9 +392,29 @@ export class SegmentedInput {
   }
 
   _onClickOrFocus (event) {
+    // When the input value was just set from empty by _onFocusIn, the browser places
+    // the cursor at the end of the newly-inserted placeholder string, which can land
+    // on an action segment.  Ignore the click position in this case and use the
+    // first editable segment instead.
+    if (this._placeholderJustSet) {
+      this._placeholderJustSet = false
+      this._activeSegment = this._findEditable(0, +1) ?? 0
+      this._segmentBuffer = ''
+      setTimeout(() => highlightSegment(this.input, this._activeSegment, this.getSegmentRanges()), 0)
+      return
+    }
+
     const pos = this.input.selectionStart
     const ranges = this.getSegmentRanges()
     const index = getCursorSegment(pos, ranges)
+
+    // If user clicked on an action segment, fire its onClick callback.
+    const clickedSeg = this.segments[index]
+    if (this._isActionSegment(clickedSeg)) {
+      if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+      return
+    }
+
     this._activeSegment = index
     this._segmentBuffer = '' // clear buffer when user clicks
     // Use setTimeout to override any native selection that the browser
@@ -404,15 +448,19 @@ export class SegmentedInput {
         }
         break
 
-      case 'ArrowLeft':
+      case 'ArrowLeft': {
         event.preventDefault()
-        this.focusSegment(this._activeSegment - 1)
+        const prev = this._findEditable(this._activeSegment - 1, -1)
+        if (prev !== null) this.focusSegment(prev)
         break
+      }
 
-      case 'ArrowRight':
+      case 'ArrowRight': {
         event.preventDefault()
-        this.focusSegment(this._activeSegment + 1)
+        const next = this._findEditable(this._activeSegment + 1, +1)
+        if (next !== null) this.focusSegment(next)
         break
+      }
 
       case 'ArrowUp':
         event.preventDefault()
@@ -426,16 +474,18 @@ export class SegmentedInput {
 
       case 'Tab':
         if (event.shiftKey) {
-          // Shift+Tab: move to previous segment, or let the browser move focus out
-          if (this._activeSegment > 0) {
+          // Shift+Tab: move to previous editable segment, or let the browser move focus out
+          const prev = this._findEditable(this._activeSegment - 1, -1)
+          if (prev !== null) {
             event.preventDefault()
-            this.focusSegment(this._activeSegment - 1)
+            this.focusSegment(prev)
           }
         } else {
-          // Tab: move to next segment, or let the browser move focus out
-          if (this._activeSegment < this.segments.length - 1) {
+          // Tab: move to next editable segment, or let the browser move focus out
+          const next = this._findEditable(this._activeSegment + 1, +1)
+          if (next !== null) {
             event.preventDefault()
-            this.focusSegment(this._activeSegment + 1)
+            this.focusSegment(next)
           }
         }
         break
@@ -454,7 +504,7 @@ export class SegmentedInput {
    */
   _handleSegmentInput (key) {
     const seg = this.segments[this._activeSegment]
-    if (!seg) return
+    if (!seg || this._isActionSegment(seg)) return
 
     // Ensure the placeholder is shown before we start reading/writing the value.
     if (!this.input.value) this.input.value = this._formattedPlaceholder
@@ -562,7 +612,9 @@ export class SegmentedInput {
       return
     }
     const values = this._parse(this.input.value)
-    const hasPlaceholder = this._placeholderValues.some((p, i) => values[i] === p)
+    const hasPlaceholder = this._placeholderValues.some((p, i) =>
+      !this._isActionSegment(this.segments[i]) && values[i] === p
+    )
     this.input.setCustomValidity(hasPlaceholder ? this._invalidMessage : '')
   }
 
@@ -575,7 +627,10 @@ export class SegmentedInput {
   _isPlaceholderState () {
     if (!this.input.value) return true
     const values = this._parse(this.input.value)
-    return this._placeholderValues.every((p, i) => values[i] === p)
+    return this._placeholderValues.every((p, i) => {
+      if (this._isActionSegment(this.segments[i])) return true // action segs don't affect state
+      return values[i] === p
+    })
   }
 
   /**
@@ -588,14 +643,44 @@ export class SegmentedInput {
   }
 
   /**
+   * Returns true when the segment has `type: 'action'` or an `onClick` callback,
+   * making it an action (button) segment.  Action segments cannot be focused,
+   * typed into, or incremented; clicking them fires `onClick(instance)` when
+   * the callback is present.  They are also excluded from constraint-validity
+   * checks so a trailing icon never blocks form submission.
+   * @param {{type?: string, onClick?: Function}} seg
+   * @returns {boolean}
+   */
+  _isActionSegment (seg) {
+    return !!(seg && (seg.type === 'action' || typeof seg.onClick === 'function'))
+  }
+
+  /**
+   * Starting from `fromIndex`, scan in `direction` (+1 or -1) and return the
+   * index of the first non-action segment.  Returns `null` if none is found.
+   * @param {number} fromIndex
+   * @param {number} direction - +1 (forward) or -1 (backward)
+   * @returns {number|null}
+   */
+  _findEditable (fromIndex, direction) {
+    let i = fromIndex
+    while (i >= 0 && i < this.segments.length) {
+      if (!this._isActionSegment(this.segments[i])) return i
+      i += direction
+    }
+    return null
+  }
+
+  /**
    * Move to the next segment (clearing the buffer).  Called after a segment
    * value has been committed via typing or overflow.
    */
   _advanceSegment () {
-    if (this._activeSegment < this.segments.length - 1) {
-      this.focusSegment(this._activeSegment + 1)
+    const next = this._findEditable(this._activeSegment + 1, +1)
+    if (next !== null) {
+      this.focusSegment(next)
     } else {
-      // Already on the last segment: just clear the buffer and re-highlight.
+      // Already on the last editable segment: just clear the buffer and re-highlight.
       this._segmentBuffer = ''
       highlightSegment(this.input, this._activeSegment, this.getSegmentRanges())
     }
