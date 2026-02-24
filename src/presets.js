@@ -446,9 +446,9 @@ const dateRange = {
 }
 
 // ---------------------------------------------------------------------------
-// Date with picker button  – YYYY-MM-DD 📅
+// Date with picker button  – YYYY-MM-DD ⏱︎
 //
-// Three editable date segments followed by an action segment whose value is '📅'.
+// Three editable date segments followed by an action segment whose value is '⏱︎'.
 // The library automatically wraps the icon with U+200B zero-width-space guards so:
 //   • clicking just to the LEFT of the icon selects the day segment (equal-distance
 //     tie-break picks the left side)
@@ -472,7 +472,7 @@ const dateWithPicker = {
     { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
     // Action segment — type: 'action' marks it as non-editable; consumer adds onClick.
     // The library injects \u200B guards around the icon automatically.
-    { value: '📅', placeholder: '📅', type: 'action' },
+    { value: '⏱︎', placeholder: '⏱︎', type: 'action' },
   ],
   format (values) {
     const pad4 = v => String(v).padStart(4, '0')
@@ -482,13 +482,13 @@ const dateWithPicker = {
     return `${pad4(values[0])}-${pad2(values[1])}-${pad2(values[2])} ${values[3]}`
   },
   parse (str) {
-    // The library strips \u200B before calling parse(), so str is e.g. "2024-01-15 📅".
+    // The library strips \u200B before calling parse(), so str is e.g. "2024-01-15 ⏱︎".
     // Strip the icon suffix, then split on '-'.
-    const dateStr = str.replace(/\s*📅\s*$/, '').trim()
+    const dateStr = str.replace(/\s*⏱︎\s*$/, '').trim()
     const parts = dateStr.split('-')
     while (parts.length < 3) parts.push('01')
     const padIfNum = (v, len) => /^\d+$/.test(v) ? v.padStart(len, '0') : v
-    return [padIfNum(parts[0], 4), padIfNum(parts[1], 2), padIfNum(parts[2], 2), '📅']
+    return [padIfNum(parts[0], 4), padIfNum(parts[1], 2), padIfNum(parts[2], 2), '⏱︎']
   },
 }
 

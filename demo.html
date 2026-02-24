@@ -85,13 +85,13 @@
     <input id="dateRange" required />
     <small>e.g. 2024-01-01 → 2024-12-31 — start date · end date</small>
 
-    <label>Date range with two 📅 buttons (click each to set start/end to today)</label>
+    <label>Date range with two ⏱︎ buttons (click each to set start/end to today)</label>
     <input id="dateRangePicker" required />
-    <small>YYYY-MM-DD 📅 → YYYY-MM-DD 📅 — independent "today" buttons for start and end</small>
+    <small>YYYY-MM-DD ⏱︎ → YYYY-MM-DD ⏱︎ — independent "today" buttons for start and end</small>
 
     <label>Date with "today" button (action segment)</label>
     <input id="dateWithPicker" required />
-    <small>YYYY-MM-DD · click the 📅 to fill in today's date</small>
+    <small>YYYY-MM-DD · click the ⏱︎ to fill in today's date</small>
 
     <label>Clearable date (click ✕ to reset to default)</label>
     <input id="clearable" value="2024-06-15" required />
@@ -217,14 +217,14 @@
       ),
     })
 
-    // dateRangePicker: two independent 📅 action segments — click each to set start/end to today
+    // dateRangePicker: two independent ⏱︎ action segments — click each to set start/end to today
     const yr = () => String(new Date().getFullYear())
     const dateRangePickerInst = new SegmentedInput(document.getElementById('dateRangePicker'), {
       segments: [
         { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
         { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
         { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-        { value: '📅', placeholder: '📅', type: 'action',
+        { value: '⏱︎', placeholder: '⏱︎', type: 'action',
           onClick (instance) {
             const t = new Date()
             instance.setSegmentValue(0, String(t.getFullYear()))
@@ -235,7 +235,7 @@
         { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
         { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
         { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
-        { value: '📅', placeholder: '📅', type: 'action',
+        { value: '⏱︎', placeholder: '⏱︎', type: 'action',
           onClick (instance) {
             const t = new Date()
             instance.setSegmentValue(4, String(t.getFullYear()))
@@ -248,12 +248,12 @@
         const p4 = v => String(v).padStart(4, '0')
         const p2 = v => String(v).padStart(2, '0')
         // Icon placed immediately before the → so value getter produces clean "date1 → date2"
-        return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]}\u2192 ${p4(values[4])}-${p2(values[5])}-${p2(values[6])} ${values[7]}`
+        return `${p4(values[0])}-${p2(values[1])}-${p2(values[2])} ${values[3]} \u2192 ${p4(values[4])}-${p2(values[5])}-${p2(values[6])} ${values[7]}`
       },
       parse (str) {
         const halves = str.split(/\s*\u2192\s*/)
         const parseHalf = (s) => {
-          const d = s.replace(/\s*📅\s*/g, '').trim()
+          const d = s.replace(/\s*⏱︎\s*/g, '').trim()
           const p = d.split('-')
           while (p.length < 3) p.push('')
           const pin = (v, len, fb) => /^\d+$/.test(v) ? v.padStart(len, '0') : (v || fb)
@@ -261,7 +261,7 @@
         }
         const [sy, sm, sd] = parseHalf(halves[0] || '')
         const [ey, em, ed] = parseHalf(halves[1] || '')
-        return [sy, sm, sd, '📅', ey, em, ed, '📅']
+        return [sy, sm, sd, '⏱︎', ey, em, ed, '⏱︎']
       },
     })
 
