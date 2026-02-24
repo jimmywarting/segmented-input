@@ -155,11 +155,14 @@ export class SegmentedInput extends EventTarget {
    *   `options` is an array of allowed string values; ↑/↓ cycle through them and typing matches the first option
    *   whose text starts with the pressed key (skips `min`/`max`/`pattern` processing);
    *   `onClick` makes the segment an **action segment** – it cannot be focused, typed into, or incremented;
-   *   when the user clicks on it, `onClick(instance)` is called (useful for "set to today" calendar buttons etc.);
+   *   when the user clicks on it, `onClick(instance, currentOption)` is called — `currentOption` is the
+   *   currently selected option value when the segment also has `options: []`, otherwise `undefined`
+   *   (useful for "set to today" calendar buttons, lock/unlock toggles, encrypt/decrypt, etc.);
    *   action segments are excluded from constraint-validity checks so they never block form submission;
    *   add `selectable: true` to an action segment to make it reachable via Tab/Arrow keys; once focused,
-   *   pressing Enter triggers its `onClick` — useful for making icon buttons keyboard accessible;
-   *   you may also mark a segment as `type: 'action'` to make it non-editable without (yet) providing an `onClick`;
+   *   pressing Enter triggers its `onClick(instance, currentOption)` — useful for making icon buttons keyboard accessible;
+   *   when a selectable action segment also has `options: []`, ↑/↓ cycles through the options (changing
+   *   the displayed icon/label) and typing a key selects the first matching option;
    *   `min`/`max` clamp up/down arrow changes;
    *   `step` controls how much each arrow press changes the value (default 1);
    *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
@@ -376,8 +379,9 @@ export class SegmentedInput extends EventTarget {
     const seg = this.segments[index]
     if (!seg) return
 
-    // Action segments cannot be adjusted.
-    if (this.#isActionSegment(seg)) return
+    // Action segments cannot be adjusted — unless they are selectable and have options
+    // (in which case ↑/↓ cycles through the options list, changing the displayed icon/text).
+    if (this.#isActionSegment(seg) && !(seg.selectable && seg.options)) return
 
     // Text segments (type: 'text') have no numeric meaning; up/down is a no-op.
     if (seg.type === 'text') return
@@ -563,7 +567,9 @@ export class SegmentedInput extends EventTarget {
         // editable segment instead.
         const r = this.getSegmentRanges()[targetIndex]
         if (r && charPos !== null && charPos >= r.start && charPos < r.end) {
-          if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+          if (typeof clickedSeg.onClick === 'function') {
+            clickedSeg.onClick(this, this.#getActionOption(clickedSeg, targetIndex))
+          }
         } else {
           const prev = this.#findEditable(targetIndex - 1, -1)
           if (prev !== null) this.#activeSegment = prev
@@ -593,7 +599,9 @@ export class SegmentedInput extends EventTarget {
     if (this.#isActionSegment(clickedSeg)) {
       const r = ranges[index]
       if (r && pos >= r.start && pos < r.end) {
-        if (typeof clickedSeg.onClick === 'function') clickedSeg.onClick(this)
+        if (typeof clickedSeg.onClick === 'function') {
+          clickedSeg.onClick(this, this.#getActionOption(clickedSeg, index))
+        }
       } else {
         const prev = this.#findEditable(index - 1, -1)
         const fallback = prev ?? this.#findEditable(0, +1)
@@ -641,10 +649,11 @@ export class SegmentedInput extends EventTarget {
 
       case 'Enter': {
         // Fire onClick on a selectable action segment when Enter is pressed.
+        // If the segment also has options, pass the currently selected option as the second argument.
         const seg = this.segments[this.#activeSegment]
         if (this.#isActionSegment(seg) && seg.selectable && typeof seg.onClick === 'function') {
           event.preventDefault()
-          seg.onClick(this)
+          seg.onClick(this, this.#getActionOption(seg, this.#activeSegment))
         }
         break
       }
@@ -705,7 +714,7 @@ export class SegmentedInput extends EventTarget {
    */
   #handleSegmentInput (key) {
     const seg = this.segments[this.#activeSegment]
-    if (!seg || this.#isActionSegment(seg)) return
+    if (!seg || (this.#isActionSegment(seg) && !(seg.selectable && seg.options))) return
 
     // Ensure the placeholder is shown before we start reading/writing the value.
     if (!this.input.value) this.input.value = this.#formattedPlaceholder
@@ -848,14 +857,28 @@ export class SegmentedInput extends EventTarget {
   /**
    * Returns true when the segment has `type: 'action'` or an `onClick` callback,
    * making it an action (button) segment.  Action segments cannot be focused,
-   * typed into, or incremented; clicking them fires `onClick(instance)` when
-   * the callback is present.  They are also excluded from constraint-validity
-   * checks so a trailing icon never blocks form submission.
+   * typed into, or incremented (unless they are `selectable` with an `options` array,
+   * in which case ↑/↓ cycles and Enter fires onClick); clicking them fires
+   * `onClick(instance, currentOption)` when the callback is present.  They are also
+   * excluded from constraint-validity checks so a trailing icon never blocks form submission.
    * @param {{type?: string, onClick?: Function}} seg
    * @returns {boolean}
    */
   #isActionSegment (seg) {
     return !!(seg && (seg.type === 'action' || typeof seg.onClick === 'function'))
+  }
+
+  /**
+   * When a segment is a selectable action segment with `options`, returns the
+   * currently selected option value from the live input value; otherwise returns
+   * `undefined`.  Centralises the repeated `seg.options ? currentValues[i] : undefined`
+   * pattern used by both click and Enter handlers.
+   * @param {{options?: string[]}} seg
+   * @param {number} index
+   * @returns {string|undefined}
+   */
+  #getActionOption (seg, index) {
+    return seg.options ? this.#currentValues()[index] : undefined
   }
 
   /**

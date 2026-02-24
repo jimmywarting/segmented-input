@@ -164,6 +164,14 @@
     <input id="calc" required />
     <small>e.g. 3 * 4 — operand · operator (↑/↓ or type +, -, *, /) · operand</small>
 
+    <label>Lock / Unlock toggle (selectable action with options — Tab+↑↓ or click to cycle)</label>
+    <input id="lockToggle" value="mysecret" />
+    <small>Selectable action with <code>options: ['🔓','🔒']</code> — ↑/↓ cycles icon, Enter/click fires handler</small>
+
+    <label>Encrypt / Decrypt mode (enum action — Tab+↑↓ to switch, Enter to apply)</label>
+    <input id="encryptMode" value="Hello" />
+    <small>Selectable action with <code>options: ['🔐 encrypt','🔑 decrypt']</code></small>
+
     <label>Full name</label>
     <input id="fullName" required />
     <small>First · Last — text segments, letters only · Tab to move between names</small>
@@ -351,6 +359,54 @@
       },
     })
 
+    // lockToggle: text segment + selectable action with options ['🔓','🔒']
+    // ↑/↓ cycles the icon; click or Enter fires onClick(instance, currentOption)
+    const lockToggleInst = new SegmentedInput(document.getElementById('lockToggle'), {
+      segments: [
+        { value: 'mysecret', placeholder: 'secret', type: 'text', pattern: /[\w]/ },
+        {
+          value: '🔓', placeholder: '🔓',
+          type: 'action', selectable: true,
+          options: ['🔓', '🔒'],
+          onClick (inst, option) {
+            const label = option === '🔒' ? 'LOCKED 🔒' : 'UNLOCKED 🔓'
+            alert(`Action fired: ${label}\nText value: "${inst.getSegmentValue(0)}"`)
+          },
+        },
+      ],
+      format: v => `${v[0]} ${v[1]}`,
+      parse (str) {
+        const clean = str.replace(/\s*(🔓|🔒)\s*$/, '').trim()
+        const icon = /🔒$/.test(str.trimEnd()) ? '🔒' : '🔓'
+        return [clean || 'secret', icon]
+      },
+    })
+
+    // encryptMode: text segment + selectable action cycling between encrypt/decrypt modes
+    const ENC_MODES = ['🔐 encrypt', '🔑 decrypt']
+    const encryptModeInst = new SegmentedInput(document.getElementById('encryptMode'), {
+      segments: [
+        { value: 'Hello', placeholder: 'text', type: 'text', pattern: /[\w\s]/ },
+        {
+          value: ENC_MODES[0], placeholder: ENC_MODES[0],
+          type: 'action', selectable: true,
+          options: ENC_MODES,
+          onClick (inst, option) {
+            const text = inst.getSegmentValue(0)
+            const mode = option ?? ENC_MODES[0]
+            alert(`Mode: ${mode}\nInput text: "${text}"`)
+          },
+        },
+      ],
+      format: v => `${v[0]} | ${v[1]}`,
+      parse (str) {
+        const mode = ENC_MODES.find(m => str.includes(m)) ?? ENC_MODES[0]
+        const modePattern = new RegExp(`\\s*\\|\\s*(${ENC_MODES.map(m => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*$`)
+        const text = str.replace(modePattern, '').trim() || 'text'
+        return [text, mode]
+      },
+    })
+
     document.getElementById('demo-form').addEventListener('submit', e => {
       e.preventDefault()
       // Use instance.value (the clean getter) for inputs with action segments to strip icons.
@@ -360,6 +416,8 @@
         ['dateRangePicker',   dateRangePickerInst.value],
         ['clearable',         clearableInst.value],
         ['coords',            coordsInst.value],
+        ['lockToggle',        lockToggleInst.value],
+        ['encryptMode',       encryptModeInst.value],
       ]
       const data = Object.fromEntries(allEntries)
       const out = document.getElementById('result')
