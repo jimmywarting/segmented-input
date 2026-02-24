@@ -15,7 +15,8 @@ A tiny, dependency-free JavaScript library that turns any `<input>` element into
 ```html
 <!-- ES module – no build step required -->
 <script type="module">
-  import { SegmentedInput, presets } from './index.js'
+  import { SegmentedInput } from './src/segmented-input.js'
+  import * as presets from './src/presets.js'
 </script>
 ```
 
@@ -29,7 +30,8 @@ Or copy `src/segmented-input.js` and `src/presets.js` into your project.
 <input id="color" value="rgba(125, 125, 125, 0.5)" />
 
 <script type="module">
-  import { SegmentedInput, presets } from './index.js'
+  import { SegmentedInput } from './src/segmented-input.js'
+  import * as presets from './src/presets.js'
 
   // Attach the RGBA preset – first click focuses the "r" segment
   new SegmentedInput(document.getElementById('color'), presets.rgba)
@@ -50,7 +52,8 @@ Or copy `src/segmented-input.js` and `src/presets.js` into your project.
 | `mac`      | `00:1A:2B:3C:4D:5E`                    |
 
 ```js
-import { SegmentedInput, presets } from 'segmented-input'
+import { SegmentedInput } from './src/segmented-input.js'
+import * as presets from './src/presets.js'
 
 new SegmentedInput(el, presets.ipv4)
 new SegmentedInput(el, presets.rgba)

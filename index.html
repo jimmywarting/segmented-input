@@ -116,7 +116,8 @@ import { SegmentedInput, presets } from 'segmented-input'</code></pre>
 </main>
 
 <script type="module">
-  import { SegmentedInput, presets } from './index.js'
+  import { SegmentedInput } from './src/segmented-input.js'
+  import * as presets from './src/presets.js'
 
   new SegmentedInput(document.getElementById('try-ipv4'), presets.ipv4)
   new SegmentedInput(document.getElementById('try-rgba'), presets.rgba)
