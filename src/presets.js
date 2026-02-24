@@ -446,14 +446,21 @@ const dateRange = {
 }
 
 // ---------------------------------------------------------------------------
-// Date with picker button  – YYYY-MM-DD 📅
+// Date with picker button  – YYYY-MM-DD​📅  (zero-width space before the icon)
 //
-// Three editable date segments followed by an action segment whose placeholder
-// is ' 📅'.  The action segment is excluded from validity checks so it never
-// blocks form submission.
+// Three editable date segments followed by an action segment whose value is
+// just '📅'.  The format function inserts a U+200B zero-width space between
+// the last date digit and the icon, creating an invisible guard zone:
+//   • clicking on the ZWS lands between the date and icon segments, so
+//     getCursorSegment picks the date side (equal distance → left wins).
+//   • clicking directly on 📅 lands inside the icon's range → action fires.
+// This means the icon can be triggered with a single click, even on an
+// unfocused input (canvas char-width estimation recovers the intended target).
 //
-// The consumer MUST supply an onClick handler when instantiating; the preset
-// itself leaves onClick undefined (no-op) so it can be spread:
+// The action segment is excluded from validity checks so it never blocks
+// form submission.
+//
+// Supply an onClick handler when instantiating:
 //
 //   new SegmentedInput(el, {
 //     ...presets.dateWithPicker,
@@ -468,20 +475,23 @@ const dateWithPicker = {
     { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
     { value: '01', placeholder: 'dd', min: 1, max: 31, step: 1, pattern: /\d/ },
     // Action segment — type: 'action' marks it as non-editable; consumer adds onClick.
-    { value: ' 📅', placeholder: ' 📅', type: 'action' },
+    // Value is the bare icon; the ZWS separator lives in the format function below.
+    { value: '📅', placeholder: '📅', type: 'action' },
   ],
   format (values) {
     const pad4 = v => String(v).padStart(4, '0')
     const pad2 = v => String(v).padStart(2, '0')
-    return `${pad4(values[0])}-${pad2(values[1])}-${pad2(values[2])}${values[3]}`
+    // \u200B (zero-width space) between date and icon acts as a guard zone so that
+    // clicking just to the left of the icon selects the day segment, not the icon.
+    return `${pad4(values[0])}-${pad2(values[1])}-${pad2(values[2])}\u200B${values[3]}`
   },
   parse (str) {
-    // Strip the action segment icon before splitting on '-'
-    const dateStr = str.replace(/ 📅$/, '').trim()
+    // Strip the ZWS + icon suffix before splitting on '-'
+    const dateStr = str.replace(/\u200B📅$/, '').trim()
     const parts = dateStr.split('-')
     while (parts.length < 3) parts.push('01')
     const padIfNum = (v, len) => /^\d+$/.test(v) ? v.padStart(len, '0') : v
-    return [padIfNum(parts[0], 4), padIfNum(parts[1], 2), padIfNum(parts[2], 2), ' 📅']
+    return [padIfNum(parts[0], 4), padIfNum(parts[1], 2), padIfNum(parts[2], 2), '📅']
   },
 }
 
