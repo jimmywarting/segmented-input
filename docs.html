@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Docs — segmented-input</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">segmented-input</a>
+  <nav class="site-nav">
+    <a href="index.html">Home</a>
+    <a href="docs.html" class="active">Docs</a>
+    <a href="demos.html">Demos</a>
+  </nav>
+  <a class="gh-link" href="https://github.com/jimmywarting/segmented-input" target="_blank" rel="noopener">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+</header>
+
+<main class="page">
+
+  <h1>API Reference</h1>
+  <p>Complete documentation for <code>segmented-input</code>. For interactive examples of every preset, see the <a href="demos.html">live demos</a>.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="presets">Built-in presets</h2>
+
+  <table>
+    <thead><tr><th>Key</th><th>Example value</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>ipv4</code></td><td><code>192.168.1.1</code></td><td>Four 0-255 octets</td></tr>
+      <tr><td><code>ipv6</code></td><td><code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code></td><td>Eight 16-bit hex groups</td></tr>
+      <tr><td><code>mac</code></td><td><code>00:1A:2B:3C:4D:5E</code></td><td>Six hex bytes</td></tr>
+      <tr><td><code>date</code></td><td><code>2024-03-15</code></td><td>YYYY-MM-DD</td></tr>
+      <tr><td><code>dateWithPicker</code></td><td><code>2024-03-15 ⏱︎</code></td><td>Date + action segment (wire up <code>onClick</code> yourself)</td></tr>
+      <tr><td><code>dateRange</code></td><td><code>2024-01-01 → 2024-12-31</code></td><td>Start date → end date</td></tr>
+      <tr><td><code>time</code></td><td><code>14:30:00</code></td><td>HH:MM:SS (24-hour)</td></tr>
+      <tr><td><code>duration</code></td><td><code>01:30:00</code></td><td>HH:MM:SS (hours unbounded)</td></tr>
+      <tr><td><code>rgba</code></td><td><code>rgba(125, 125, 125, 0.5)</code></td><td>r/g/b ∈ [0,255], a ∈ [0,1]</td></tr>
+      <tr><td><code>hsla</code></td><td><code>hsla(180, 50%, 75%, 1)</code></td><td>h 0-360, s/l 0-100%, a 0-1</td></tr>
+      <tr><td><code>uuid</code></td><td><code>550e8400-e29b-41d4-a716-446655440000</code></td><td>Five hex groups (8-4-4-4-12)</td></tr>
+      <tr><td><code>semver</code></td><td><code>2.14.3</code></td><td>MAJOR.MINOR.PATCH</td></tr>
+      <tr><td><code>creditCard</code></td><td><code>4111 1111 1111 1111</code></td><td>Four groups of four digits</td></tr>
+      <tr><td><code>expiryDate</code></td><td><code>12/28</code></td><td>MM/YY</td></tr>
+      <tr><td><code>phone</code></td><td><code>(555) 867-5309</code></td><td>US area code · exchange · subscriber</td></tr>
+      <tr><td><code>price</code></td><td><code>$19.99</code></td><td>Dollars · cents</td></tr>
+      <tr><td><code>currency</code></td><td><code>€12.50</code></td><td>Symbol (↑/↓ or type) · dollars · cents</td></tr>
+      <tr><td><code>mathExpr</code></td><td><code>(6 + 4) / 2</code></td><td>Three operands</td></tr>
+      <tr><td><code>calc</code></td><td><code>3 * 4</code></td><td>Operand · operator · operand</td></tr>
+      <tr><td><code>fullName</code></td><td><code>Jane Doe</code></td><td>First · last text segments</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Usage</h3>
+<pre><code class="language-js">import { SegmentedInput } from 'segmented-input/src/segmented-input.js'
+import * as presets from 'segmented-input/src/presets.js'
+
+new SegmentedInput(el, presets.ipv4)
+new SegmentedInput(el, presets.rgba)
+new SegmentedInput(el, presets.duration)
+// … any key from the table above</code></pre>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="custom-format">Custom format</h2>
+
+  <p>
+    Supply a <code>segments</code> array (one entry per segment), a <code>format</code> function
+    (array → display string), and a <code>parse</code> function (display string → array):
+  </p>
+
+<pre><code class="language-js">new SegmentedInput(el, {
+  segments: [
+    { value: '125', min: 0, max: 255, step: 1   },   // r
+    { value: '125', min: 0, max: 255, step: 1   },   // g
+    { value: '125', min: 0, max: 255, step: 1   },   // b
+    { value: '0.5', min: 0, max: 1,   step: 0.1 },   // a
+  ],
+  format: (v) => `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${v[3]})`,
+  parse: (s) => {
+    const m = s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+    return m ? [m[1], m[2], m[3], m[4] ?? '1'] : ['0', '0', '0', '1']
+  },
+})</code></pre>
+
+  <h3>Segment properties</h3>
+  <table>
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>value</code></td><td><code>string</code></td><td>Default/initial value for this segment.</td></tr>
+      <tr><td><code>placeholder</code></td><td><code>string</code></td><td>Placeholder text shown when the segment is empty.</td></tr>
+      <tr><td><code>min</code></td><td><code>number</code></td><td>Minimum numeric value (clamps on ↑/↓).</td></tr>
+      <tr><td><code>max</code></td><td><code>number</code></td><td>Maximum numeric value (clamps on ↑/↓).</td></tr>
+      <tr><td><code>step</code></td><td><code>number</code></td><td>Amount to increment/decrement per keypress. Default <code>1</code>.</td></tr>
+      <tr><td><code>maxLength</code></td><td><code>number</code></td><td>Maximum number of characters the user can type into this segment.</td></tr>
+      <tr><td><code>pattern</code></td><td><code>RegExp</code></td><td>Only characters matching this pattern are accepted when typing.</td></tr>
+      <tr><td><code>type</code></td><td><code>'text' | 'action'</code></td><td>Set to <code>'action'</code> for non-editable icon/button segments.</td></tr>
+      <tr><td><code>selectable</code></td><td><code>boolean</code></td><td>When <code>true</code> (action segments), ↑/↓ cycles through <code>options</code>.</td></tr>
+      <tr><td><code>options</code></td><td><code>string[]</code></td><td>List of values a selectable action segment can cycle through.</td></tr>
+      <tr><td><code>onClick</code></td><td><code>(instance, option?) => void</code></td><td>Called when an action segment is clicked or Enter is pressed on it.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Action segments</h3>
+  <p>
+    Action segments are non-editable "button" segments embedded in the input value — useful for
+    "clear", "today", geolocation, or toggle icons. The library adds the <code>si-action-active</code>
+    class to the input when an action segment is focused, letting you style the amber selection:
+  </p>
+
+<pre><code class="language-js">new SegmentedInput(el, {
+  segments: [
+    { value: '2024', placeholder: 'yyyy', min: 1, max: 9999, step: 1 },
+    { value: '06',   placeholder: 'mm',   min: 1, max: 12,   step: 1 },
+    { value: '15',   placeholder: 'dd',   min: 1, max: 31,   step: 1 },
+    { value: '⏱︎',    placeholder: '⏱︎', type: 'action', onClick(instance) {
+        const t = new Date()
+        instance.setSegmentValue(0, `${t.getFullYear()}`)
+        instance.setSegmentValue(1, `${t.getMonth() + 1)}`.padStart(2, '0'))
+        instance.setSegmentValue(2, `${t.getDate()}`.padStart(2, '0'))
+      },
+    },
+  ],
+  format: (v) => `${v[0]}-${v[1]}-${v[2]} ${v[3]}`,
+  parse:  (s) => { /* … */ },
+})</code></pre>
+
+<pre><code class="language-css">/* Highlight the action segment in amber when focused */
+input.si-action-active::selection {
+  background: #f0ad4e;
+  color: #000;
+}</code></pre>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="constructor">Constructor</h2>
+
+<pre><code class="language-js">const instance = new SegmentedInput(inputElement, options)</code></pre>
+
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>inputElement</code></td><td><code>HTMLInputElement</code></td><td>The <code>&lt;input&gt;</code> to enhance.</td></tr>
+      <tr><td><code>options.segments</code></td><td><code>SegmentDef[]</code></td><td>One entry per segment (see segment properties above).</td></tr>
+      <tr><td><code>options.format</code></td><td><code>(values: string[]) =&gt; string</code></td><td>Build the display string from segment values.</td></tr>
+      <tr><td><code>options.parse</code></td><td><code>(str: string) =&gt; string[]</code></td><td>Split the display string back into segment values. Must return the same number of elements as <code>segments</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="instance-methods">Instance methods</h2>
+
+  <table>
+    <thead><tr><th>Method</th><th>Returns</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>focusSegment(index)</code></td><td><code>void</code></td><td>Highlight the segment at <code>index</code> (clamped to valid range).</td></tr>
+      <tr><td><code>getSegmentValue(index)</code></td><td><code>string</code></td><td>Return the current string value of segment <code>index</code>.</td></tr>
+      <tr><td><code>setSegmentValue(index, value)</code></td><td><code>void</code></td><td>Overwrite a segment value and reformat. Fires <code>input</code> + <code>change</code> events.</td></tr>
+      <tr><td><code>increment()</code></td><td><code>void</code></td><td>Increment the active segment by its <code>step</code>.</td></tr>
+      <tr><td><code>decrement()</code></td><td><code>void</code></td><td>Decrement the active segment by its <code>step</code>.</td></tr>
+      <tr><td><code>getSegmentRanges()</code></td><td><code>{start, end, value}[]</code></td><td>Character ranges for all segments in the current value string.</td></tr>
+      <tr><td><code>destroy()</code></td><td><code>void</code></td><td>Remove all event listeners. Call when removing the element.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Reading the value</h3>
+  <p>
+    For inputs without action segments, read <code>input.value</code> as normal.
+    For inputs <em>with</em> action segments (icons embedded in the value string),
+    use the instance's <code>value</code> getter, which strips the icon segments:
+  </p>
+<pre><code class="language-js">const inst = new SegmentedInput(input, optionsWithActionSegments)
+
+// ✅ Clean value, icons stripped
+console.log(inst.value)
+
+// ⚠️  Raw value — includes icon characters when action segments are present
+console.log(input.value)</code></pre>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="events">Instance events</h2>
+
+  <p>The underlying <code>&lt;input&gt;</code> element dispatches these custom events:</p>
+
+  <table>
+    <thead><tr><th>Event</th><th>Detail</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>segmentfocus</code></td><td><code>{ index: number }</code></td><td>Fired when a segment becomes active (focused/clicked).</td></tr>
+      <tr><td><code>segmentblur</code></td><td><code>{ index: number }</code></td><td>Fired when the active segment loses focus.</td></tr>
+      <tr><td><code>segmentchange</code></td><td><code>{ index: number, value: string }</code></td><td>Fired when a segment's value changes.</td></tr>
+    </tbody>
+  </table>
+
+<pre><code class="language-js">const inst = new SegmentedInput(input, presets.date)
+
+inst.addEventListener('segmentfocus', evt => {
+  console.log('focused segment', evt.detail.index)
+})
+inst.addEventListener('segmentchange', evt => {
+  console.log('segment', evt.detail.index, 'changed to', evt.detail.value)
+})</code></pre>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <h2 id="low-level">Low-level helpers</h2>
+
+  <p>These utilities are exported separately for advanced use cases:</p>
+
+<pre><code class="language-js">import {
+  getSegmentRanges,
+  getCursorSegment,
+  highlightSegment,
+} from 'segmented-input'</code></pre>
+
+  <table>
+    <thead><tr><th>Function</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>getSegmentRanges(value, parse, format)</code></td><td>Compute <code>{start, end, value}[]</code> character ranges for each segment in <code>value</code>.</td></tr>
+      <tr><td><code>getCursorSegment(cursorPos, segmentRanges)</code></td><td>Return the index of the segment the cursor position falls within.</td></tr>
+      <tr><td><code>highlightSegment(input, index, segmentRanges)</code></td><td>Call <code>setSelectionRange</code> to visually select/highlight a segment.</td></tr>
+    </tbody>
+  </table>
+
+</main>
+
+</body>
+</html>

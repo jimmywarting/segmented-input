@@ -1,11 +1,13 @@
+/*! <segmented-input> MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
+
 /**
  * presets.js
  *
  * Ready-to-use SegmentedInput configurations for common input formats.
  * Each preset can be spread into the SegmentedInput constructor options:
  *
- *   import { presets } from 'segmented-input/presets'
- *   const picker = new SegmentedInput(el, { ...presets.ipv4 })
+ *   import { ipv4 } from 'segmented-input/presets.js'
+ *   const picker = new SegmentedInput(el, { ...ipv4 })
  *
  * @license MIT
  */
@@ -493,7 +495,7 @@ const dateWithPicker = {
   },
 }
 
-export const presets = {
+export {
   ipv4, ipv6, duration, rgba, uuid, mac,
   time, date, dateRange, dateWithPicker, creditCard, semver, expiryDate, phone, hsla,
   price, mathExpr, fullName, calc, currency,

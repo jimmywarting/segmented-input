@@ -1,12 +1,4 @@
-/**
- * segmented-input.js
- *
- * A library for creating segmented text inputs that behave like <input type="date">.
- * Factored out from the cursor-selection logic in html-duration-picker.js by nadchif,
- * generalized to support any custom format: IPv4, IPv6, RGBA, duration, UUID, MAC, etc.
- *
- * @license MIT
- */
+/*! <segmented-input> MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
 
 /**
  * Compute the start/end character positions of each segment within the formatted string.
@@ -21,7 +13,7 @@
  * @param {function(string[]): string} format - joins segment values back into a formatted string
  * @returns {Array<{start: number, end: number, value: string}>}
  */
-export function getSegmentRanges (value, parse, format) {
+function getSegmentRanges (value, parse, format) {
   const segmentValues = parse(value)
   // Use the normalised/formatted string so that positions are consistent
   // with whatever value the SegmentedInput class writes back to input.value.
@@ -54,7 +46,7 @@ export function getSegmentRanges (value, parse, format) {
  * @param {Array<{start: number, end: number}>} segmentRanges
  * @returns {number} segment index
  */
-export function getCursorSegment (cursorPos, segmentRanges) {
+function getCursorSegment (cursorPos, segmentRanges) {
   if (!segmentRanges.length) return 0
 
   // Exact hit – cursor is inside the segment
@@ -91,7 +83,7 @@ export function getCursorSegment (cursorPos, segmentRanges) {
  * @param {number} segmentIndex
  * @param {Array<{start: number, end: number}>} segmentRanges
  */
-export function highlightSegment (input, segmentIndex, segmentRanges) {
+function highlightSegment (input, segmentIndex, segmentRanges) {
   const seg = segmentRanges[segmentIndex]
   if (seg) {
     input.setSelectionRange(seg.start, seg.end)
@@ -118,7 +110,7 @@ export function highlightSegment (input, segmentIndex, segmentRanges) {
  *   },
  * })
  */
-export class SegmentedInput extends EventTarget {
+class SegmentedInput extends EventTarget {
   // ---------------------------------------------------------------------------
   // Private fields
   // ---------------------------------------------------------------------------
@@ -477,7 +469,7 @@ export class SegmentedInput extends EventTarget {
     try {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      const style = window.getComputedStyle(this.input)
+      const style = getComputedStyle(this.input)
       ctx.font = [style.fontStyle, style.fontWeight, style.fontSize, style.fontFamily]
         .filter(Boolean).join(' ')
       const text = this.input.value || this.#formattedPlaceholder
@@ -989,4 +981,10 @@ export class SegmentedInput extends EventTarget {
       highlightSegment(this.input, this.#activeSegment, this.getSegmentRanges())
     }
   }
+}
+
+export {
+  getCursorSegment,
+  getSegmentRanges,
+  SegmentedInput,
 }

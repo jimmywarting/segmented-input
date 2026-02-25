@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>segmented-input</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">segmented-input</a>
+  <nav class="site-nav">
+    <a href="index.html" class="active">Home</a>
+    <a href="docs.html">Docs</a>
+    <a href="demos.html">Demos</a>
+  </nav>
+  <a class="gh-link" href="https://github.com/jimmywarting/segmented-input" target="_blank" rel="noopener">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+</header>
+
+<main class="page">
+
+  <div class="hero">
+    <span class="hero-eyebrow">JavaScript library</span>
+    <h1>segmented-input</h1>
+    <p class="hero-lead">
+      A tiny, dependency-free library that turns any <code>&lt;input&gt;</code> into a
+      <strong>segmented picker</strong> — just like <code>&lt;input type="date"&gt;</code> —
+      for <em>any</em> custom format: IPv4, RGBA, UUID, MAC, duration, and more.
+    </p>
+    <div class="hero-ctas">
+      <a href="demos.html" class="btn btn-primary">Live demos &rarr;</a>
+      <a href="docs.html"  class="btn btn-outline">API reference</a>
+    </div>
+  </div>
+
+  <!-- ── Try it ── -->
+  <div class="try-it">
+    <h3>&#128075; Try it — click any field, then use &#8593; &#8595; to change values</h3>
+    <div class="try-grid">
+      <div>
+        <label for="try-ipv4">IPv4 address</label>
+        <input id="try-ipv4" value="192.168.0.1" />
+      </div>
+      <div>
+        <label for="try-rgba">RGBA colour</label>
+        <input id="try-rgba" value="rgba(125, 125, 125, 0.5)" />
+      </div>
+      <div>
+        <label for="try-uuid">UUID</label>
+        <input id="try-uuid" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Features ── -->
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>&#128073; Click to select</h4>
+      <p>Click any segment to highlight it instantly. No cursor hunting.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#8593; &#8595; Increment / decrement</h4>
+      <p>Arrow keys change the focused segment, clamped to <code>min</code>/<code>max</code>.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#8592; &#8594; Navigate</h4>
+      <p>Left/right arrows and Tab move between segments, or leave the field.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#129695; Zero dependencies</h4>
+      <p>Pure ES module, ~5 kb. No build step. Drop in anywhere.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#127775; Any format</h4>
+      <p>Provide <code>parse</code> + <code>format</code> functions and define your own segments.</p>
+    </div>
+  </div>
+
+  <!-- ── Installation ── -->
+  <h2 id="install">Installation</h2>
+  <p>No build step required. Import directly from a CDN or install with npm:</p>
+
+<pre><code class="language-html">&lt;!-- Via CDN (jsDelivr) --&gt;
+&lt;script type="module"&gt;
+  import { SegmentedInput, presets } from 'https://cdn.jsdelivr.net/npm/segmented-input/index.js'
+&lt;/script&gt;</code></pre>
+
+<pre><code class="language-js">// npm
+// npm install segmented-input
+import { SegmentedInput, presets } from 'segmented-input'</code></pre>
+
+  <!-- ── Quick start ── -->
+  <h2 id="quick-start">Quick start</h2>
+
+<pre><code class="language-html">&lt;input id="color" value="rgba(125, 125, 125, 0.5)" /&gt;
+
+&lt;script type="module"&gt;
+  import { SegmentedInput, presets } from './index.js'
+
+  // Attach the RGBA preset — first click focuses the "r" segment
+  new SegmentedInput(document.getElementById('color'), presets.rgba)
+&lt;/script&gt;</code></pre>
+
+  <p>
+    See the <a href="docs.html">full API reference</a> for custom formats, all preset options, instance
+    methods, and events — or jump straight to the <a href="demos.html">live demos</a> to see every
+    built-in preset in action.
+  </p>
+
+</main>
+
+<script type="module">
+  import { SegmentedInput } from './src/segmented-input.js'
+  import * as presets from './src/presets.js'
+
+  new SegmentedInput(document.getElementById('try-ipv4'), presets.ipv4)
+  new SegmentedInput(document.getElementById('try-rgba'), presets.rgba)
+  new SegmentedInput(document.getElementById('try-uuid'), presets.uuid)
+</script>
+
+</body>
+</html>

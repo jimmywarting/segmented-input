@@ -3,20 +3,13 @@
   "version": "0.1.0",
   "description": "A library for creating segmented text inputs that behave like <input type=\"date\">. Supports IPv4, IPv6, RGBA, duration, UUID, MAC addresses, and any custom format.",
   "type": "module",
-  "main": "index.js",
-  "module": "index.js",
   "exports": {
-    ".": "./index.js",
-    "./presets": "./src/presets.js"
+    "./src/*.js": "./src/*.js"
   },
   "files": [
-    "index.js",
     "src/"
   ],
-  "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "lint": "eslint src/ index.js"
-  },
+  "scripts": {},
   "keywords": [
     "segmented",
     "input",
