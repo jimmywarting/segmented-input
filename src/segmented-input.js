@@ -208,6 +208,14 @@ class SegmentedInput extends EventTarget {
       input.placeholder = this.#format(this.#placeholderValues)
     }
 
+    // Apply inputmode and autocapitalize from options when not already set on the element.
+    if (options.inputmode && !input.hasAttribute('inputmode')) {
+      input.setAttribute('inputmode', options.inputmode)
+    }
+    if (options.autocapitalize && !input.hasAttribute('autocapitalize')) {
+      input.setAttribute('autocapitalize', options.autocapitalize)
+    }
+
     // Leave input.value as-is when it already has a real value from markup.
     // When empty, we keep it empty so the browser shows the HTML placeholder attribute
     // and the field correctly fails constraint validation (e.g. required).
