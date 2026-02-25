@@ -32,28 +32,28 @@
   <h2 id="presets">Built-in presets</h2>
 
   <table>
-    <thead><tr><th>Key</th><th>Example value</th><th>Description</th></tr></thead>
+    <thead><tr><th>Key</th><th>Example value</th><th>Description</th><th><code>inputmode</code></th><th><code>autocapitalize</code></th></tr></thead>
     <tbody>
-      <tr><td><code>ipv4</code></td><td><code>192.168.1.1</code></td><td>Four 0-255 octets</td></tr>
-      <tr><td><code>ipv6</code></td><td><code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code></td><td>Eight 16-bit hex groups</td></tr>
-      <tr><td><code>mac</code></td><td><code>00:1A:2B:3C:4D:5E</code></td><td>Six hex bytes</td></tr>
-      <tr><td><code>date</code></td><td><code>2024-03-15</code></td><td>YYYY-MM-DD</td></tr>
-      <tr><td><code>dateWithPicker</code></td><td><code>2024-03-15 ⏱︎</code></td><td>Date + action segment (wire up <code>onClick</code> yourself)</td></tr>
-      <tr><td><code>dateRange</code></td><td><code>2024-01-01 → 2024-12-31</code></td><td>Start date → end date</td></tr>
-      <tr><td><code>time</code></td><td><code>14:30:00</code></td><td>HH:MM:SS (24-hour)</td></tr>
-      <tr><td><code>duration</code></td><td><code>01:30:00</code></td><td>HH:MM:SS (hours unbounded)</td></tr>
-      <tr><td><code>rgba</code></td><td><code>rgba(125, 125, 125, 0.5)</code></td><td>r/g/b ∈ [0,255], a ∈ [0,1]</td></tr>
-      <tr><td><code>hsla</code></td><td><code>hsla(180, 50%, 75%, 1)</code></td><td>h 0-360, s/l 0-100%, a 0-1</td></tr>
-      <tr><td><code>uuid</code></td><td><code>550e8400-e29b-41d4-a716-446655440000</code></td><td>Five hex groups (8-4-4-4-12)</td></tr>
-      <tr><td><code>semver</code></td><td><code>2.14.3</code></td><td>MAJOR.MINOR.PATCH</td></tr>
-      <tr><td><code>creditCard</code></td><td><code>4111 1111 1111 1111</code></td><td>Four groups of four digits</td></tr>
-      <tr><td><code>expiryDate</code></td><td><code>12/28</code></td><td>MM/YY</td></tr>
-      <tr><td><code>phone</code></td><td><code>(555) 867-5309</code></td><td>US area code · exchange · subscriber</td></tr>
-      <tr><td><code>price</code></td><td><code>$19.99</code></td><td>Dollars · cents</td></tr>
-      <tr><td><code>currency</code></td><td><code>€12.50</code></td><td>Symbol (↑/↓ or type) · dollars · cents</td></tr>
-      <tr><td><code>mathExpr</code></td><td><code>(6 + 4) / 2</code></td><td>Three operands</td></tr>
-      <tr><td><code>calc</code></td><td><code>3 * 4</code></td><td>Operand · operator · operand</td></tr>
-      <tr><td><code>fullName</code></td><td><code>Jane Doe</code></td><td>First · last text segments</td></tr>
+      <tr><td><code>ipv4</code></td><td><code>192.168.1.1</code></td><td>Four 0-255 octets</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>ipv6</code></td><td><code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code></td><td>Eight 16-bit hex groups</td><td><code>text</code></td><td><code>characters</code></td></tr>
+      <tr><td><code>mac</code></td><td><code>00:1A:2B:3C:4D:5E</code></td><td>Six hex bytes</td><td><code>text</code></td><td><code>characters</code></td></tr>
+      <tr><td><code>date</code></td><td><code>2024-03-15</code></td><td>YYYY-MM-DD</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>dateWithPicker</code></td><td><code>2024-03-15 ⏱︎</code></td><td>Date + action segment (wire up <code>onClick</code> yourself)</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>dateRange</code></td><td><code>2024-01-01 → 2024-12-31</code></td><td>Start date → end date</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>time</code></td><td><code>14:30:00</code></td><td>HH:MM:SS (24-hour)</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>duration</code></td><td><code>01:30:00</code></td><td>HH:MM:SS (hours unbounded)</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>rgba</code></td><td><code>rgba(125, 125, 125, 0.5)</code></td><td>r/g/b ∈ [0,255], a ∈ [0,1]</td><td><code>decimal</code></td><td>—</td></tr>
+      <tr><td><code>hsla</code></td><td><code>hsla(180, 50%, 75%, 1)</code></td><td>h 0-360, s/l 0-100%, a 0-1</td><td><code>decimal</code></td><td>—</td></tr>
+      <tr><td><code>uuid</code></td><td><code>550e8400-e29b-41d4-a716-446655440000</code></td><td>Five hex groups (8-4-4-4-12)</td><td><code>text</code></td><td><code>characters</code></td></tr>
+      <tr><td><code>semver</code></td><td><code>2.14.3</code></td><td>MAJOR.MINOR.PATCH</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>creditCard</code></td><td><code>4111 1111 1111 1111</code></td><td>Four groups of four digits</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>expiryDate</code></td><td><code>12/28</code></td><td>MM/YY</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>phone</code></td><td><code>(555) 867-5309</code></td><td>US area code · exchange · subscriber</td><td><code>tel</code></td><td>—</td></tr>
+      <tr><td><code>price</code></td><td><code>$19.99</code></td><td>Dollars · cents</td><td><code>decimal</code></td><td>—</td></tr>
+      <tr><td><code>currency</code></td><td><code>€12.50</code></td><td>Symbol (↑/↓ or type) · dollars · cents</td><td><code>decimal</code></td><td>—</td></tr>
+      <tr><td><code>mathExpr</code></td><td><code>(6 + 4) / 2</code></td><td>Three operands</td><td><code>numeric</code></td><td>—</td></tr>
+      <tr><td><code>calc</code></td><td><code>3 * 4</code></td><td>Operand · operator · operand</td><td>—</td><td>—</td></tr>
+      <tr><td><code>fullName</code></td><td><code>Jane Doe</code></td><td>First · last text segments</td><td><code>text</code></td><td><code>words</code></td></tr>
     </tbody>
   </table>
 
@@ -148,6 +148,10 @@ input.si-action-active::selection {
       <tr><td><code>options.segments</code></td><td><code>SegmentDef[]</code></td><td>One entry per segment (see segment properties above).</td></tr>
       <tr><td><code>options.format</code></td><td><code>(values: string[]) =&gt; string</code></td><td>Build the display string from segment values.</td></tr>
       <tr><td><code>options.parse</code></td><td><code>(str: string) =&gt; string[]</code></td><td>Split the display string back into segment values. Must return the same number of elements as <code>segments</code>.</td></tr>
+      <tr><td><code>options.inputmode</code></td><td><code>string</code></td><td>Sets the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode"><code>inputmode</code></a> attribute on the <code>&lt;input&gt;</code> (e.g. <code>'numeric'</code>, <code>'decimal'</code>, <code>'tel'</code>, <code>'text'</code>). Hints the mobile virtual keyboard type. Ignored when the attribute is already present on the element. All built-in presets set this automatically.</td></tr>
+      <tr><td><code>options.autocapitalize</code></td><td><code>string</code></td><td>Sets the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autocapitalize"><code>autocapitalize</code></a> attribute on the <code>&lt;input&gt;</code>. Use <code>'characters'</code> for hex fields (UUID, MAC, IPv6) or <code>'words'</code> for name fields. Ignored when the attribute is already present. Built-in presets set this where applicable.</td></tr>
+      <tr><td><code>options.invalidMessage</code></td><td><code>string</code></td><td>Message for <code>setCustomValidity()</code> when segments are incomplete. Defaults to <code>'Please fill in all fields.'</code>.</td></tr>
+      <tr><td><code>options.actionActiveClass</code></td><td><code>string</code></td><td>CSS class added to the <code>&lt;input&gt;</code> when a selectable action segment is active. Defaults to <code>'si-action-active'</code>.</td></tr>
     </tbody>
   </table>
 
