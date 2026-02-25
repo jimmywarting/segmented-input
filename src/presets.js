@@ -43,7 +43,7 @@ const ipv4 = {
 // ---------------------------------------------------------------------------
 const ipv6 = {
   inputmode: 'text',
-  autocapitalize: 'none',
+  autocapitalize: 'characters',
   segments: Array.from({ length: 8 }, () => ({
     value: '0000', placeholder: '----', min: 0, max: 0xFFFF, step: 1, radix: 16, pattern: /[0-9a-fA-F]/,
   })),
@@ -114,7 +114,7 @@ const rgba = {
 // ---------------------------------------------------------------------------
 const uuid = {
   inputmode: 'text',
-  autocapitalize: 'none',
+  autocapitalize: 'characters',
   segments: [
     { value: '00000000',     placeholder: 'xxxxxxxx',     maxLength: 8,  pattern: /[0-9a-fA-F]/ },
     { value: '0000',         placeholder: 'xxxx',         maxLength: 4,  pattern: /[0-9a-fA-F]/ },
@@ -141,7 +141,7 @@ const uuid = {
 // ---------------------------------------------------------------------------
 const mac = {
   inputmode: 'text',
-  autocapitalize: 'none',
+  autocapitalize: 'characters',
   segments: Array.from({ length: 6 }, () => ({
     value: '00', placeholder: '--', min: 0, max: 255, step: 1, radix: 16, pattern: /[0-9a-fA-F]/,
   })),
