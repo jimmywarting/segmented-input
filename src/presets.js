@@ -18,6 +18,7 @@
 // a real value and cleanly signals an unfilled segment to _updateValidity.
 // ---------------------------------------------------------------------------
 const ipv4 = {
+  inputmode: 'numeric',
   segments: [
     { value: '0', placeholder: '--', min: 0, max: 255, step: 1, pattern: /\d/ },
     { value: '0', placeholder: '--', min: 0, max: 255, step: 1, pattern: /\d/ },
@@ -41,6 +42,8 @@ const ipv4 = {
 // placeholder '----' uses '-' which is blocked by pattern, so '0000' is always valid.
 // ---------------------------------------------------------------------------
 const ipv6 = {
+  inputmode: 'text',
+  autocapitalize: 'characters',
   segments: Array.from({ length: 8 }, () => ({
     value: '0000', placeholder: '----', min: 0, max: 0xFFFF, step: 1, radix: 16, pattern: /[0-9a-fA-F]/,
   })),
@@ -58,6 +61,7 @@ const ipv6 = {
 // Duration  – HH:MM:SS
 // ---------------------------------------------------------------------------
 const duration = {
+  inputmode: 'numeric',
   segments: [
     // Hours: no upper bound in a duration, but cap typing at 3 digits (0–999)
     { value: '00', placeholder: 'hh', min: 0, step: 1, maxLength: 3, pattern: /\d/ },
@@ -82,6 +86,7 @@ const duration = {
 // parse uses a relaxed regex so placeholder strings round-trip correctly.
 // ---------------------------------------------------------------------------
 const rgba = {
+  inputmode: 'decimal',
   segments: [
     { value: '0',   placeholder: '--', min: 0, max: 255, step: 1,   pattern: /\d/    },
     { value: '0',   placeholder: '--', min: 0, max: 255, step: 1,   pattern: /\d/    },
@@ -108,6 +113,8 @@ const rgba = {
 // maxLength is used for auto-advance since there is no numeric max to derive from.
 // ---------------------------------------------------------------------------
 const uuid = {
+  inputmode: 'text',
+  autocapitalize: 'characters',
   segments: [
     { value: '00000000',     placeholder: 'xxxxxxxx',     maxLength: 8,  pattern: /[0-9a-fA-F]/ },
     { value: '0000',         placeholder: 'xxxx',         maxLength: 4,  pattern: /[0-9a-fA-F]/ },
@@ -133,6 +140,8 @@ const uuid = {
 // placeholder '--' uses '-' (blocked by pattern) so '00' is always a valid value.
 // ---------------------------------------------------------------------------
 const mac = {
+  inputmode: 'text',
+  autocapitalize: 'characters',
   segments: Array.from({ length: 6 }, () => ({
     value: '00', placeholder: '--', min: 0, max: 255, step: 1, radix: 16, pattern: /[0-9a-fA-F]/,
   })),
@@ -151,6 +160,7 @@ const mac = {
 // Like duration but hours are capped at 23.
 // ---------------------------------------------------------------------------
 const time = {
+  inputmode: 'numeric',
   segments: [
     { value: '00', placeholder: 'hh', min: 0, max: 23, step: 1, pattern: /\d/ },
     { value: '00', placeholder: 'mm', min: 0, max: 59, step: 1, pattern: /\d/ },
@@ -172,6 +182,7 @@ const time = {
 // and none of those strings appear in the '-' separators.
 // ---------------------------------------------------------------------------
 const date = {
+  inputmode: 'numeric',
   segments: [
     { value: new Date().getFullYear(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
     { value: '01',   placeholder: 'mm',   min: 1, max: 12,   step: 1, pattern: /\d/ },
@@ -193,6 +204,7 @@ const date = {
 // placeholder 'nnnn' uses 'n' which is not a digit and not a space.
 // ---------------------------------------------------------------------------
 const creditCard = {
+  inputmode: 'numeric',
   segments: Array.from({ length: 4 }, () => ({
     value: '0000', placeholder: 'nnnn', min: 0, max: 9999, step: 1, maxLength: 4, pattern: /\d/,
   })),
@@ -212,6 +224,7 @@ const creditCard = {
 // placeholder 'n' uses a letter blocked by pattern, not '.' separator.
 // ---------------------------------------------------------------------------
 const semver = {
+  inputmode: 'numeric',
   segments: [
     { value: '1', placeholder: 'n', min: 0, step: 1, maxLength: 3, pattern: /\d/ },
     { value: '0', placeholder: 'n', min: 0, step: 1, maxLength: 3, pattern: /\d/ },
@@ -232,6 +245,7 @@ const semver = {
 // placeholder 'mm'/'yy' uses letters not in '/\d/' and not in '/' separator.
 // ---------------------------------------------------------------------------
 const expiryDate = {
+  inputmode: 'numeric',
   segments: [
     { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
     { value: '25', placeholder: 'yy', min: 0, max: 99, step: 1, pattern: /\d/ },
@@ -253,6 +267,7 @@ const expiryDate = {
 // parse uses a relaxed regex so placeholder strings round-trip correctly.
 // ---------------------------------------------------------------------------
 const phone = {
+  inputmode: 'tel',
   segments: [
     { value: '555',  placeholder: 'nnn',  min: 0, max: 999,  step: 1, maxLength: 3, pattern: /\d/ },
     { value: '555',  placeholder: 'nnn',  min: 0, max: 999,  step: 1, maxLength: 3, pattern: /\d/ },
@@ -276,6 +291,7 @@ const phone = {
 // parse uses a relaxed regex so placeholder strings round-trip correctly.
 // ---------------------------------------------------------------------------
 const hsla = {
+  inputmode: 'decimal',
   segments: [
     { value: '0', placeholder: '--', min: 0,   max: 360, step: 1,   pattern: /\d/    },
     { value: '0', placeholder: '--', min: 0,   max: 100, step: 1,   pattern: /\d/    },
@@ -298,6 +314,7 @@ const hsla = {
 // placeholder '--' uses '-' which is blocked by pattern: /\d/
 // ---------------------------------------------------------------------------
 const price = {
+  inputmode: 'decimal',
   segments: [
     // Dollars: no upper bound; cap typing at 5 digits (0–99999)
     { value: '0', placeholder: '--', min: 0, step: 1, maxLength: 5, pattern: /\d/ },
@@ -322,6 +339,7 @@ const price = {
 // appear in the '(', ' + ', ') / ' boilerplate.
 // ---------------------------------------------------------------------------
 const mathExpr = {
+  inputmode: 'numeric',
   segments: [
     { value: '0', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
     { value: '0', placeholder: '--', min: 0, max: 999, step: 1, pattern: /\d/ },
@@ -345,6 +363,8 @@ const mathExpr = {
 // maxLength caps each name at 20 characters before auto-advancing to last name.
 // ---------------------------------------------------------------------------
 const fullName = {
+  inputmode: 'text',
+  autocapitalize: 'words',
   segments: [
     { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /\p{L}/u },
     { value: '', type: 'text', placeholder: '----------', maxLength: 20, pattern: /\p{L}/u },
@@ -389,6 +409,7 @@ const calc = {
 // placeholder '?' for the symbol (not a digit, not '.').
 // ---------------------------------------------------------------------------
 const currency = {
+  inputmode: 'decimal',
   segments: [
     { value: '$',  placeholder: '?',  options: ['$', '€', '£', '¥'] },
     { value: '0',  placeholder: '--', min: 0, step: 1, maxLength: 5, pattern: /\d/ },
@@ -413,6 +434,7 @@ const currency = {
 // both halves are located correctly even when their values are identical.
 // ---------------------------------------------------------------------------
 const dateRange = {
+  inputmode: 'numeric',
   segments: [
     // Start date
     { value: String(new Date().getFullYear()), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
@@ -468,6 +490,7 @@ const dateRange = {
 //   })
 // ---------------------------------------------------------------------------
 const dateWithPicker = {
+  inputmode: 'numeric',
   segments: [
     { value: String(new Date().getFullYear()), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
     { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
