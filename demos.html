@@ -271,6 +271,7 @@
   // dateRangePicker: two independent ⏱︎ action segments
   const yr = () => String(new Date().getFullYear())
   const dateRangePickerInst = new SegmentedInput(document.getElementById('dateRangePicker'), {
+    inputmode: 'numeric',
     segments: [
       { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
       { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
@@ -315,6 +316,7 @@
 
   // clearable: date with ✕ action that resets to defaultValue
   const clearableInst = new SegmentedInput(document.getElementById('clearable'), {
+    inputmode: 'numeric',
     segments: [
       { value: yr(), placeholder: 'yyyy', min: 1, max: 9999, step: 1, maxLength: 4, pattern: /\d/ },
       { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
@@ -349,6 +351,7 @@
 
   // coords: lat/long with ◉ geolocation action segment
   const coordsInst = new SegmentedInput(document.getElementById('coords'), {
+    inputmode: 'decimal',
     segments: [
       { value: '0.000000', placeholder: 'lat',  type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
       { value: '0.000000', placeholder: 'long', type: 'text', maxLength: 12, pattern: /[\d.\-]/ },
@@ -375,6 +378,7 @@
 
   // lockToggle: text + selectable action with options ['🔓','🔒']
   const lockToggleInst = new SegmentedInput(document.getElementById('lockToggle'), {
+    inputmode: 'text',
     segments: [
       { value: 'mysecret', placeholder: 'secret', type: 'text', pattern: /[\w]/ },
       {
@@ -398,6 +402,7 @@
   // encryptMode: text + selectable action cycling between modes
   const ENC_MODES = ['🔐 encrypt', '🔑 decrypt']
   const encryptModeInst = new SegmentedInput(document.getElementById('encryptMode'), {
+    inputmode: 'text',
     segments: [
       { value: 'Hello', placeholder: 'text', type: 'text', pattern: /[\w\s]/ },
       {

@@ -165,6 +165,16 @@ class SegmentedInput extends EventTarget {
    * @param {function(string): string[]} options.parse
    *   Splits the full display string back into an array of segment value strings.
    *   Must always return the same number of elements as `options.segments`.
+   * @param {string} [options.inputmode]
+   *   Sets the [`inputmode`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode)
+   *   attribute on the `<input>` element, overriding the browser default virtual keyboard on mobile.
+   *   Only applied when the attribute is not already present on the element.
+   *   Built-in presets set this automatically (e.g. `'numeric'` for dates, `'tel'` for phone numbers).
+   * @param {string} [options.autocapitalize]
+   *   Sets the [`autocapitalize`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autocapitalize)
+   *   attribute on the `<input>` element.  Only applied when the attribute is not already present.
+   *   Use `'characters'` for hex fields (UUID, MAC, IPv6) so mobile keyboards auto-uppercase A–F,
+   *   and `'words'` for name fields.
    * @param {string} [options.invalidMessage]
    *   The message passed to `setCustomValidity()` when one or more segments still show
    *   placeholder text (i.e. the value is incomplete).  Defaults to `'Please fill in all fields.'`.
