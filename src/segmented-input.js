@@ -1,6 +1,85 @@
 /*! <segmented-input> MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
 
 /**
+ * @typedef {Object} Segment
+ * @property {string}  [value]
+ *   Default numeric value used when incrementing from a blank state.
+ *
+ * @property {string}  [placeholder]
+ *   Display string shown when the segment has no real value
+ *   (e.g. 'hh', 'mm', 'ss'). Defaults to `value` when not set.
+ *
+ * @property {string}  [type]
+ *
+ * @property {string[]} [options]
+ *   Array of allowed string values.
+ *   ↑/↓ cycles through them.
+ *   Typing selects the first option whose text starts with the pressed key.
+ *   When `options` is set, `min`/`max`/`pattern` processing is skipped.
+ *
+ * @property {(instance: any, currentOption: string | undefined) => void} [onClick]
+ *   Makes the segment an action segment.
+ *   It cannot be focused, typed into, or incremented.
+ *   Called as `onClick(instance, currentOption)` when clicked.
+ *   `currentOption` is the currently selected option value when `options` exists,
+ *   otherwise `undefined`.
+ *
+ * @property {boolean} [selectable]
+ *   Makes an action segment reachable via Tab/Arrow keys.
+ *   When focused, pressing Enter triggers `onClick(instance, currentOption)`.
+ *   If combined with `options`, ↑/↓ cycles options and typing selects the first match.
+ *
+ * @property {number} [min]
+ *   Minimum value (clamps arrow changes).
+ *
+ * @property {number} [max]
+ *   Maximum value (clamps arrow changes).
+ *
+ * @property {number} [step=1]
+ *   Increment/decrement amount per arrow press.
+ *
+ * @property {number} [radix=10]
+ *   Numeric base used for increment/decrement (e.g. 16 for hex).
+ *
+ * @property {RegExp} [pattern]
+ *   RegExp tested against each typed character.
+ *   Non-matching keys are blocked.
+ *
+ * @property {number} [maxLength]
+ *   Maximum number of typed characters before auto-advancing.
+ *   Inferred from `max` when not explicitly set.
+ *
+ * @typedef {Object} SegmentedInputOptions
+ * @property {Segment[]} segments
+ *   Segment metadata configuration.
+ *
+ * @property {(values: string[]) => string} format
+ *   Converts an array of segment value strings into the full display string.
+ *
+ * @property {(displayValue: string) => string[]} parse
+ *   Splits the full display string back into an array of segment value strings.
+ *   Must always return the same number of elements as `segments`.
+ *
+ * @property {string} [inputmode]
+ *   Sets the `inputmode` attribute on the `<input>` element.
+ *   Only applied when the attribute is not already present.
+ *   Built-in presets may set this automatically (e.g. 'numeric', 'tel').
+ *
+ * @property {string} [autocapitalize]
+ *   Sets the `autocapitalize` attribute on the `<input>` element.
+ *   Only applied when the attribute is not already present.
+ *   Use 'characters' for hex fields and 'words' for name fields.
+ *
+ * @property {string} [invalidMessage='Please fill in all fields.']
+ *   Message passed to `setCustomValidity()` when one or more segments
+ *   still show placeholder text.
+ *
+ * @property {string} [actionActiveClass='si-action-active']
+ *   CSS class added to the `<input>` when the active segment
+ *   is a selectable action segment.
+ */
+
+/**
  * Compute the start/end character positions of each segment within the formatted string.
  *
  * Segments are located by searching for each segment's value in the formatted string
@@ -139,48 +218,7 @@ class SegmentedInput extends EventTarget {
 
   /**
    * @param {HTMLInputElement} input - the input element to enhance
-   * @param {Object} options
-   * @param {Array<{value?: string, placeholder?: string, type?: string, options?: string[], onClick?: Function, min?: number, max?: number, step?: number, radix?: number, pattern?: RegExp, maxLength?: number}>} options.segments
-   *   Segment metadata.  `value` is the default numeric value used when incrementing from a blank state;
-   *   `placeholder` is the display string shown in the segment when it has no real value (e.g. 'hh', 'mm', 'ss') –
-   *   defaults to `value` when not set;
-   *   `options` is an array of allowed string values; ↑/↓ cycle through them and typing matches the first option
-   *   whose text starts with the pressed key (skips `min`/`max`/`pattern` processing);
-   *   `onClick` makes the segment an **action segment** – it cannot be focused, typed into, or incremented;
-   *   when the user clicks on it, `onClick(instance, currentOption)` is called — `currentOption` is the
-   *   currently selected option value when the segment also has `options: []`, otherwise `undefined`
-   *   (useful for "set to today" calendar buttons, lock/unlock toggles, encrypt/decrypt, etc.);
-   *   action segments are excluded from constraint-validity checks so they never block form submission;
-   *   add `selectable: true` to an action segment to make it reachable via Tab/Arrow keys; once focused,
-   *   pressing Enter triggers its `onClick(instance, currentOption)` — useful for making icon buttons keyboard accessible;
-   *   when a selectable action segment also has `options: []`, ↑/↓ cycles through the options (changing
-   *   the displayed icon/label) and typing a key selects the first matching option;
-   *   `min`/`max` clamp up/down arrow changes;
-   *   `step` controls how much each arrow press changes the value (default 1);
-   *   `radix` sets the numeric base for increment/decrement (default 10, use 16 for hex segments);
-   *   `pattern` is an optional RegExp tested against each typed character – non-matching keys are blocked;
-   *   `maxLength` sets the maximum number of typed characters before auto-advancing (inferred from `max` when not set).
-   * @param {function(string[]): string} options.format
-   *   Converts an array of segment value strings into the full display string.
-   * @param {function(string): string[]} options.parse
-   *   Splits the full display string back into an array of segment value strings.
-   *   Must always return the same number of elements as `options.segments`.
-   * @param {string} [options.inputmode]
-   *   Sets the [`inputmode`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode)
-   *   attribute on the `<input>` element, overriding the browser default virtual keyboard on mobile.
-   *   Only applied when the attribute is not already present on the element.
-   *   Built-in presets set this automatically (e.g. `'numeric'` for dates, `'tel'` for phone numbers).
-   * @param {string} [options.autocapitalize]
-   *   Sets the [`autocapitalize`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autocapitalize)
-   *   attribute on the `<input>` element.  Only applied when the attribute is not already present.
-   *   Use `'characters'` for hex fields (UUID, MAC, IPv6) so mobile keyboards auto-uppercase A–F,
-   *   and `'words'` for name fields.
-   * @param {string} [options.invalidMessage]
-   *   The message passed to `setCustomValidity()` when one or more segments still show
-   *   placeholder text (i.e. the value is incomplete).  Defaults to `'Please fill in all fields.'`.
-   * @param {string} [options.actionActiveClass]
-   *   CSS class added to the `<input>` when the active segment is a selectable action segment.
-   *   Defaults to `'si-action-active'`.  Use for `input.si-action-active::selection { ... }` styling.
+   * @param {SegmentedInputOptions} options
    */
   constructor (input, options) {
     if (!input || input.tagName !== 'INPUT') {
