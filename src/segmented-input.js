@@ -215,6 +215,8 @@ class SegmentedInput extends EventTarget {
   #onBlur
   #onKeyDown
   #onMouseDown
+  #onPaste
+  #onInput
 
   /**
    * @param {HTMLInputElement} input - the input element to enhance
@@ -276,12 +278,16 @@ class SegmentedInput extends EventTarget {
     this.#onBlur = this.#onBlurOut.bind(this)
     this.#onKeyDown = this.#onKeydown.bind(this)
     this.#onMouseDown = this.#captureMouseX.bind(this)
+    this.#onPaste = this.#handlePaste.bind(this)
+    this.#onInput = this.#handleInput.bind(this)
 
     input.addEventListener('mousedown', this.#onMouseDown)
     input.addEventListener('click', this.#onClick)
     input.addEventListener('focus', this.#onFocus)
     input.addEventListener('blur', this.#onBlur)
     input.addEventListener('keydown', this.#onKeyDown)
+    input.addEventListener('paste', this.#onPaste)
+    input.addEventListener('input', this.#onInput)
   }
 
   // ---------------------------------------------------------------------------
@@ -417,6 +423,8 @@ class SegmentedInput extends EventTarget {
     this.input.removeEventListener('focus', this.#onFocus)
     this.input.removeEventListener('blur', this.#onBlur)
     this.input.removeEventListener('keydown', this.#onKeyDown)
+    this.input.removeEventListener('paste', this.#onPaste)
+    this.input.removeEventListener('input', this.#onInput)
   }
 
   // ---------------------------------------------------------------------------
@@ -505,6 +513,57 @@ class SegmentedInput extends EventTarget {
   // ---------------------------------------------------------------------------
   // Event handlers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Handle paste events: prevent the default browser insertion and instead
+   * simulate typing each character through the segment input handler so that
+   * pattern validation, max-length, and auto-advance all work correctly.
+   * This handles both formatted pastes (e.g. "1234 5678 9012 3456") and raw
+   * digit strings (e.g. "1234123412341234") — separator characters that don't
+   * match a segment's pattern are silently skipped, and segments auto-advance
+   * once their max-length is reached.
+   * @param {ClipboardEvent} event
+   */
+  #handlePaste (event) {
+    event.preventDefault()
+    const text = (event.clipboardData ?? window.clipboardData)?.getData('text/plain') ?? ''
+    if (!text) return
+    if (!this.input.value) this.input.value = this.#formattedPlaceholder
+    // Start filling from the first editable segment so a paste always populates
+    // from the beginning rather than the currently focused segment.
+    const firstEditable = this.#findEditable(0, +1)
+    if (firstEditable !== null) this.focusSegment(firstEditable)
+    // Feed each character through the existing segment input handler.
+    // #handleSegmentInput validates the character against the segment pattern,
+    // updates the buffer, reformats the value, and auto-advances when needed.
+    for (const char of text) {
+      this.#handleSegmentInput(char)
+    }
+    this.#dispatch('change')
+    this.#updateValidity()
+  }
+
+  /**
+   * Handle browser autofill / autocomplete: when the browser sets input.value
+   * directly (bypassing keydown), re-parse and reformat the value so it is
+   * correctly distributed across segments.
+   * Synthetic `input` events dispatched by our own code have `isTrusted: false`
+   * and are ignored to avoid infinite loops.
+   * @param {InputEvent} event
+   */
+  #handleInput (event) {
+    if (!event.isTrusted) return
+    const rawValue = this.input.value
+    if (!rawValue) return
+    const values = this.#parse(this.#stripZWS(rawValue))
+    this.input.value = this.#formatGuarded(values)
+    this.#segmentBuffer = ''
+    if (document.activeElement === this.input) {
+      this.focusSegment(this.#activeSegment)
+    }
+    this.#dispatch('input')
+    this.#updateValidity()
+  }
 
   /** Store the mouse X position at mousedown time, before #onFocusIn can change
    *  input.value (which resets selectionStart to 0).  Used in #onClickOrFocus to
