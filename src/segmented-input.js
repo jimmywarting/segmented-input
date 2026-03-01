@@ -60,16 +60,6 @@
  *   Splits the full display string back into an array of segment value strings.
  *   Must always return the same number of elements as `segments`.
  *
- * @property {string} [inputmode]
- *   Sets the `inputmode` attribute on the `<input>` element.
- *   Only applied when the attribute is not already present.
- *   Built-in presets may set this automatically (e.g. 'numeric', 'tel').
- *
- * @property {string} [autocapitalize]
- *   Sets the `autocapitalize` attribute on the `<input>` element.
- *   Only applied when the attribute is not already present.
- *   Use 'characters' for hex fields and 'words' for name fields.
- *
  * @property {string} [invalidMessage='Please fill in all fields.']
  *   Message passed to `setCustomValidity()` when one or more segments
  *   still show placeholder text.
@@ -77,7 +67,14 @@
  * @property {string} [actionActiveClass='si-action-active']
  *   CSS class added to the `<input>` when the active segment
  *   is a selectable action segment.
+ *
+ * Any additional properties (e.g. `inputmode`, `autocapitalize`, `autocomplete`,
+ * `autofocus`, `id`, `class`, etc.) are treated as HTML attributes and set on the
+ * `<input>` element — but only when the attribute is not already present on the element.
  */
+
+/** Option keys that are handled directly by SegmentedInput and must not be forwarded to the input element as HTML attributes. */
+const RESERVED_OPTION_KEYS = new Set(['segments', 'format', 'parse', 'invalidMessage', 'actionActiveClass'])
 
 /**
  * Compute the start/end character positions of each segment within the formatted string.
@@ -256,12 +253,13 @@ class SegmentedInput extends EventTarget {
       input.placeholder = this.#format(this.#placeholderValues)
     }
 
-    // Apply inputmode and autocapitalize from options when not already set on the element.
-    if (options.inputmode && !input.hasAttribute('inputmode')) {
-      input.setAttribute('inputmode', options.inputmode)
-    }
-    if (options.autocapitalize && !input.hasAttribute('autocapitalize')) {
-      input.setAttribute('autocapitalize', options.autocapitalize)
+    // Apply any extra options as HTML attributes on the input (e.g. inputmode, autocapitalize,
+    // autocomplete, autofocus, id, class…), but only when not already set on the element.
+    // Event-handler attributes (on*) are intentionally skipped.
+    for (const [key, val] of Object.entries(options)) {
+      if (!RESERVED_OPTION_KEYS.has(key) && !key.startsWith('on') && val != null && !input.hasAttribute(key)) {
+        input.setAttribute(key, val)
+      }
     }
 
     // Leave input.value as-is when it already has a real value from markup.
