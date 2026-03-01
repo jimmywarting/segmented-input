@@ -516,8 +516,12 @@ class SegmentedInput extends EventTarget {
 
   /**
    * Handle paste events: prevent the default browser insertion and instead
-   * parse the pasted text through the configured parse/format functions so
-   * that the value is always correctly distributed across segments.
+   * simulate typing each character through the segment input handler so that
+   * pattern validation, max-length, and auto-advance all work correctly.
+   * This handles both formatted pastes (e.g. "1234 5678 9012 3456") and raw
+   * digit strings (e.g. "1234123412341234") — separator characters that don't
+   * match a segment's pattern are silently skipped, and segments auto-advance
+   * once their max-length is reached.
    * @param {ClipboardEvent} event
    */
   #handlePaste (event) {
@@ -525,11 +529,16 @@ class SegmentedInput extends EventTarget {
     const text = (event.clipboardData ?? window.clipboardData)?.getData('text/plain') ?? ''
     if (!text) return
     if (!this.input.value) this.input.value = this.#formattedPlaceholder
-    const values = this.#parse(this.#stripZWS(text))
-    this.input.value = this.#formatGuarded(values)
-    this.#segmentBuffer = ''
-    this.focusSegment(this.#activeSegment)
-    this.#dispatch('input')
+    // Start filling from the first editable segment so a paste always populates
+    // from the beginning rather than the currently focused segment.
+    const firstEditable = this.#findEditable(0, +1)
+    if (firstEditable !== null) this.focusSegment(firstEditable)
+    // Feed each character through the existing segment input handler.
+    // #handleSegmentInput validates the character against the segment pattern,
+    // updates the buffer, reformats the value, and auto-advances when needed.
+    for (const char of text) {
+      this.#handleSegmentInput(char)
+    }
     this.#dispatch('change')
     this.#updateValidity()
   }
