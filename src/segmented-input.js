@@ -215,6 +215,8 @@ class SegmentedInput extends EventTarget {
   #onBlur
   #onKeyDown
   #onMouseDown
+  #onPaste
+  #onInput
 
   /**
    * @param {HTMLInputElement} input - the input element to enhance
@@ -276,12 +278,16 @@ class SegmentedInput extends EventTarget {
     this.#onBlur = this.#onBlurOut.bind(this)
     this.#onKeyDown = this.#onKeydown.bind(this)
     this.#onMouseDown = this.#captureMouseX.bind(this)
+    this.#onPaste = this.#handlePaste.bind(this)
+    this.#onInput = this.#handleInput.bind(this)
 
     input.addEventListener('mousedown', this.#onMouseDown)
     input.addEventListener('click', this.#onClick)
     input.addEventListener('focus', this.#onFocus)
     input.addEventListener('blur', this.#onBlur)
     input.addEventListener('keydown', this.#onKeyDown)
+    input.addEventListener('paste', this.#onPaste)
+    input.addEventListener('input', this.#onInput)
   }
 
   // ---------------------------------------------------------------------------
@@ -417,6 +423,8 @@ class SegmentedInput extends EventTarget {
     this.input.removeEventListener('focus', this.#onFocus)
     this.input.removeEventListener('blur', this.#onBlur)
     this.input.removeEventListener('keydown', this.#onKeyDown)
+    this.input.removeEventListener('paste', this.#onPaste)
+    this.input.removeEventListener('input', this.#onInput)
   }
 
   // ---------------------------------------------------------------------------
@@ -505,6 +513,48 @@ class SegmentedInput extends EventTarget {
   // ---------------------------------------------------------------------------
   // Event handlers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Handle paste events: prevent the default browser insertion and instead
+   * parse the pasted text through the configured parse/format functions so
+   * that the value is always correctly distributed across segments.
+   * @param {ClipboardEvent} event
+   */
+  #handlePaste (event) {
+    event.preventDefault()
+    const text = (event.clipboardData ?? window.clipboardData)?.getData('text/plain') ?? ''
+    if (!text) return
+    if (!this.input.value) this.input.value = this.#formattedPlaceholder
+    const values = this.#parse(this.#stripZWS(text))
+    this.input.value = this.#formatGuarded(values)
+    this.#segmentBuffer = ''
+    this.focusSegment(this.#activeSegment)
+    this.#dispatch('input')
+    this.#dispatch('change')
+    this.#updateValidity()
+  }
+
+  /**
+   * Handle browser autofill / autocomplete: when the browser sets input.value
+   * directly (bypassing keydown), re-parse and reformat the value so it is
+   * correctly distributed across segments.
+   * Synthetic `input` events dispatched by our own code have `isTrusted: false`
+   * and are ignored to avoid infinite loops.
+   * @param {InputEvent} event
+   */
+  #handleInput (event) {
+    if (!event.isTrusted) return
+    const rawValue = this.input.value
+    if (!rawValue) return
+    const values = this.#parse(this.#stripZWS(rawValue))
+    this.input.value = this.#formatGuarded(values)
+    this.#segmentBuffer = ''
+    if (document.activeElement === this.input) {
+      this.focusSegment(this.#activeSegment)
+    }
+    this.#dispatch('input')
+    this.#updateValidity()
+  }
 
   /** Store the mouse X position at mousedown time, before #onFocusIn can change
    *  input.value (which resets selectionStart to 0).  Used in #onClickOrFocus to
