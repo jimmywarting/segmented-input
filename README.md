@@ -95,6 +95,9 @@ new SegmentedInput(el, {
 | `segments` | `Array` | One entry per segment. Each entry may have `value` (default), `min`, `max`, `step`. |
 | `format` | `(values: string[]) => string` | Build the display string from an array of segment values. |
 | `parse` | `(str: string) => string[]` | Split the display string into segment values. Must always return the same number of elements as `segments`. |
+| `invalidMessage` | `string` | Message for `setCustomValidity()` when segments are incomplete. Defaults to `'Please fill in all fields.'`. |
+| `actionActiveClass` | `string` | CSS class added to the `<input>` when a selectable action segment is active. Defaults to `'si-action-active'`. |
+| _…any_ | `string` | Any other property (e.g. `inputmode`, `autocapitalize`, `autocomplete`, `autofocus`, `id`, `class`) is set as an HTML attribute on the `<input>` via `setAttribute`. Skipped when the attribute is already present; `on*` event-handler attributes are never forwarded. |
 
 #### Instance methods
 
