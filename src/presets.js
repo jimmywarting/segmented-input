@@ -18,6 +18,7 @@
 // a real value and cleanly signals an unfilled segment to _updateValidity.
 // ---------------------------------------------------------------------------
 const ipv4 = {
+  pattern: '^(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}$',
   inputmode: 'numeric',
   segments: [
     { value: '0', placeholder: '--', min: 0, max: 255, step: 1, pattern: /\d/ },
@@ -140,6 +141,7 @@ const uuid = {
 // placeholder '--' uses '-' (blocked by pattern) so '00' is always a valid value.
 // ---------------------------------------------------------------------------
 const mac = {
+  pattern: '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$',
   inputmode: 'text',
   autocapitalize: 'characters',
   segments: Array.from({ length: 6 }, () => ({
@@ -152,7 +154,7 @@ const mac = {
     const parts = str.split(':')
     while (parts.length < 6) parts.push('00')
     return parts.slice(0, 6).map(p => p.padStart(2, '0').toUpperCase())
-  },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +175,7 @@ const time = {
     const parts = str.split(':')
     while (parts.length < 3) parts.push('00')
     return parts.slice(0, 3).map(p => p.padStart(2, '0'))
-  },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -204,6 +206,8 @@ const date = {
 // placeholder 'nnnn' uses 'n' which is not a digit and not a space.
 // ---------------------------------------------------------------------------
 const creditCard = {
+  pattern: '^(\\d{4}[- ]?){3}\\d{4}$',
+  autocomplete: 'cc-number',
   inputmode: 'numeric',
   segments: Array.from({ length: 4 }, () => ({
     value: '0000', placeholder: 'nnnn', min: 0, max: 9999, step: 1, maxLength: 4, pattern: /\d/,
@@ -245,6 +249,8 @@ const semver = {
 // placeholder 'mm'/'yy' uses letters not in '/\d/' and not in '/' separator.
 // ---------------------------------------------------------------------------
 const expiryDate = {
+  pattern: '^(0[1-9]|1[0-2])\\/\\d{2}$',
+  autocomplete: 'cc-exp',
   inputmode: 'numeric',
   segments: [
     { value: '01', placeholder: 'mm', min: 1, max: 12, step: 1, pattern: /\d/ },
